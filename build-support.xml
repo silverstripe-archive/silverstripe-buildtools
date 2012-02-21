@@ -3,17 +3,13 @@
 	This is an Phing build.xml file, not an Ant one.
 	Place this in your project root and check the buildtools repository out as ./buildtools
 -->
-<project name="aa" default="archive" basedir=".">
-    <property name="project" value="myproject" />
-    
+<project name="imported">
 	<property name="basedir" value="." />
     <property name="artifactsDir" value="${basedir}/_artifacts" description="Base dir for all output of build commands" />
     <property name="phpunitVer" value="3.4" />
     <property name="phpunit" value="phpunit" />
     <property name="phpsupportDir" value="${basedir}/buildtools" />
     <property name="phpunitExcludes" value="" />
-
-    <property name="buildrepository" value="user@server:/dir" />
 
 	<!-- Archives the base folder as a *.tar.gz or *.zip, without version information -->
 	<target name="archive" if="buildname">

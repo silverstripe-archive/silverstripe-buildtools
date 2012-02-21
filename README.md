@@ -1,8 +1,8 @@
 How to use this repository
 ==========================
 
- * Check the repository into your project as ./buildtools
- * Copy build.xml to your project root
+ * Check the repository into a subdirectory of your project, for example as a piston import or as a separate git repo in a subdirectory.
+ * Run the "install" script within the repository to create a stub build.xml in your project root.
  * Install Phing
  * Run 'phing phpunit'
 
