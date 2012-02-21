@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 
+	This is an Phing build.xml file, not an Ant one.
+	Place this in your project root and check the buildtools repository out as ./buildtools
+-->
+<project name="aa" default="archive" basedir=".">
+    <property name="project" value="myproject" />
+    
+	<property name="basedir" value="." />
+    <property name="artifactsDir" value="${basedir}/_artifacts" description="Base dir for all output of build commands" />
+    <property name="phpunitVer" value="3.4" />
+    <property name="phpunit" value="phpunit" />
+    <property name="phpsupportDir" value="${basedir}/buildtools" />
+    <property name="phpunitExcludes" value="" />
+
+    <property name="buildrepository" value="user@server:/dir" />
+
+	<!-- Archives the base folder as a *.tar.gz or *.zip, without version information -->
+	<target name="archive" if="buildname">
+	    <!-- temp folder -->
+		<exec executable="php" outputproperty="systmp">
+            <arg line="-r 'echo sys_get_temp_dir();'" />
+		</exec>
+		<property name="tmp" value="${systmp}/${project}-${buildname}/" />
+		<property name="archivename" value="${artifactsDir}/${project}-${buildname}.tar.gz" />
+
+		<!-- Copy into a new folder before creating tar, excluding unnecessary file -->
+		<copy todir="${tmp}/aa-${buildname}">
+			<fileset dir="${basedir}">
+				<include name="**/**" />
+				<exclude name="assets/**" />
+				<exclude name="_artifacts/**" />
+				<exclude name="**/*.log" />
+				<exclude name="**/.svn/**" />
+				<exclude name="**/.git/**" />
+				<exclude name="**/.project" />
+				<exclude name="**/.buildpath" />
+				<exclude name="**/.settings" />
+				<exclude name="**/.idea/**" />
+				<exclude name="**/tests/**" />
+				<exclude name="cms/docs/**" />
+				<exclude name="sapphire/docs/**" />
+				<exclude name="mysite/docs/**" />
+				<exclude name="build.xml" />
+				<exclude name="phpunit.xml" />
+				<exclude name="Capfile" />
+				<exclude name="_ss_environment.php" />
+				<exclude name="silverstripe-cache/**" />
+				<exclude name="themes/designs/**" />
+			</fileset>
+		</copy>
+
+		<!-- create tar archive -->
+		<tar destfile="${archivename}" compression="gzip">
+			<fileset dir="${tmp}">
+				<include name="**/**" />
+			</fileset>
+		</tar>
+		
+		<!-- clean up -->
+		<delete dir="${tmp}" />
+
+        <!-- tell TeamCity about the new artifact -->
+        <echo message="##teamcity[publishArtifacts '${archivename}']" />
+	</target>
+	
+	<target name="upload-archive" if="buildname">
+		<property name="archivename" value="${artifactsDir}/${project}-${buildname}.tar.gz" />
+		<exec executable="scp">
+            <arg line="-P 2222" />
+            <arg line="${archivename}" />
+            <arg line="${buildrepository}" />
+		</exec>
+	</target>
+	
+
+    <!-- prepare for test run -->
+    <target name="prepare">
+        <delete includeemptydirs="true" description="Clear artifacts dir" quiet="true">
+            <fileset dir="${artifactsDir}" includes="**/*" />
+        </delete>
+
+        <mkdir dir="${artifactsDir}/" />
+
+        <delete includeemptydirs="true" description="Clear manifest dir" quiet="true">
+            <fileset dir="${basedir}/silverstripe-cache" includes="**/*" />
+        </delete>
+
+        <mkdir dir="${basedir}/silverstripe-cache" />
+        <chmod file="${basedir}/silverstripe-cache" mode="2777" />
+
+        <exec dir="${basedir}" executable="php" output="${basedir}/phpunit.xml">
+            <arg line="${phpsupportDir}/phpunit.xml.php" />
+            <arg line="${phpsupportDir}" />
+            <arg line="${phpunitVer}" />
+            <arg line="${phpunitExcludes}" />
+        </exec>
+    </target>
+    
+    <!-- run phpunit -->
+    <target name="phpunit" depends="prepare">
+        <mkdir dir="${artifactsDir}/phpunit/" description="Make sure that artifacts directory exists" />
+
+        <exec dir="${basedir}" executable="${phpunit}" error='${artifactsDir}/phpunit/phpunit.log' passthru="true">
+            <arg line="--configuration ${basedir}/phpunit.xml" />
+            <arg line="--stderr" />
+        </exec>
+
+        <echo message="##teamcity[publishArtifacts '${artifactsDir}/phpunit/phpunit.log']" />
+    </target>
+    
+    <!-- run phpunit, generating coverage stats -->
+    <target name="phpunit-coverage-statistics" depends="prepare">
+        <mkdir dir="${artifactsDir}/phpunit/" description="Make sure that artifacts directory exists" />
+
+        <exec dir="${basedir}" executable="${phpunit}" error='${artifactsDir}/phpunit/phpunit.log'>
+            <arg line="--configuration ${basedir}/phpunit.xml" />
+            <arg line="--coverage-clover ${artifactsDir}/phpunit/coverage.xml" />
+            <arg line="--stderr" />
+        </exec>
+
+        <echo message="##teamcity[publishArtifacts '${artifactsDir}/phpunit/phpunit.log']" />
+
+        <exec dir="${basedir}" executable="php" failonerror="false">
+            <arg line="-f ${phpsupportDir}/clover_parser.php -- ${artifactsDir}/phpunit/coverage.xml" />
+        </exec>
+    </target>
+
+    <!-- run phpunit some other way -->
+    <target name="phpunit-coverage" depends="prepare">
+        <mkdir dir="${artifactsDir}/phpunit/" description="Make sure that artifacts directory exists" />
+
+        <exec dir="${basedir}" executable="${phpunit}" error='${artifactsDir}/phpunit/phpunit.log'>
+            <arg line="--configuration ${basedir}/phpunit.xml" />
+            <arg line="--coverage-clover ${artifactsDir}/phpunit/coverage.xml" />
+            <arg line="--coverage-html ${artifactsDir}/phpunit/report" />
+            <arg line="--stderr" />
+        </exec>
+
+        <echo message="##teamcity[publishArtifacts '${artifactsDir}/phpunit/phpunit.log']" />
+
+        <exec dir="${basedir}" executable="php" failonerror="false">
+            <arg line="-f ${phpsupportDir}/clover_parser.php -- ${artifactsDir}/phpunit/coverage.xml" />
+        </exec>
+
+        <zip destfile="${artifactsDir}/coverage.zip" basedir="${artifactsDir}/phpunit/report" whenempty="skip" />
+        <echo message="##teamcity[publishArtifacts '${artifactsDir}/coverage.zip']" />
+    </target>
+</project>
