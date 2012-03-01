@@ -1,0 +1,75 @@
+#!/usr/bin/env php
+<?php
+
+if(empty($_SERVER['argv'][1])) {
+	echo "Usage: newproject <directory> <buildtools directory>
+	
+Create a new project in the given directory.
+
+Build tools will be installed as a subdirectory - ./buildtools by default.
+";
+}
+
+$projectDir = $_SERVER['argv'][1];
+$buildToolsDir = empty($_SERVER['argv'][2]) ? "buildtools" : $_SERVER['argv'][2];
+
+echo "Project directory: $projectDir\n";
+
+$toolDir = dirname(__FILE__);
+$remoteRepo = trim(str_replace("Fetch URL:","", `cd $toolDir && git remote show origin | grep "Fetch URL"`));
+
+echo "Build tools repository: $remoteRepo\n";
+
+if(file_exists("$projectDir/build.xml")) {
+	echo "ERROR: $projectDir/build.xml exists.  If you want to recreate, please delete it first.\n";
+	exit(2);
+}
+
+echo "Build tools dir: $buildToolsDir\n";
+
+$projectname = basename($projectDir);
+echo "Project name: $projectname\n";
+
+$source = <<<XML
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This is an Phing build.xml file, not an Ant one -->
+<project name="$projectname" default="archive" basedir=".">
+	<property name="project" value="$projectname" />
+	<property name="phpsupportDir" value="./$buildToolsDir" />
+	<property name="buildrepository" value="## enter build repository destination here - user@server:/dir ##" />
+
+	<!-- install the buildtools if they're not already installed -->
+	<if><not><available file="\${phpsupportDir}" /></not><then>
+	<exec dir="." executable="git" passthru="true">
+		<arg line="clone $remoteRepo ./$buildToolsDir" />
+	</exec>
+	</then></if>
+
+	<import file="\${phpsupportDir}/build-support.xml" />
+</project>
+
+XML;
+
+if(!file_exists($projectDir)) {
+	echo "Creating directory: $projectDir\n";
+	mkdir($projectDir);
+}
+
+echo "\nWriting the following to $projectDir/build.xml:\n\n";
+echo "----------------------\n$source\n----------------------\n";
+
+file_put_contents("$projectDir/build.xml", $source);
+
+$modulesSource = "tools/buildtools:master git@gitorious.silverstripe.com:ss-tools/buildtools.git
+sapphire:master git@github.com:silverstripe/sapphire.git
+cms:master git@github.com:silverstripe/silverstripe-cms.git
+";
+
+echo "\nWriting the following to $projectDir/.modules:\n\n";
+echo "----------------------\n$modulesSource\n----------------------\n";
+
+file_put_contents("$projectDir/.modules", $modulesSource);
+
+echo "Initialising with 'phing checkout':\n";
+chdir($projectDir);
+passthru("phing checkout");

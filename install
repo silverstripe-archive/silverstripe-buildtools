@@ -11,32 +11,6 @@ This script is designed for SilverStripe.\n";
 	exit(1);
 }
 
-echo "Project directory: $dir\n";
-
-if(file_exists("$dir/build.xml")) {
-	echo "ERROR: $dir/build.xml exists.  If you want to recreate, please delete it first.\n";
-	exit(2);
-}
-
 $buildtoolsRelDir = substr($buildtoolsDir, strlen($dir)+1);
-echo "Build tools dir: $buildtoolsRelDir\n";
 
-$projectname = basename($dir);
-echo "Project name: $projectname\n";
-
-$source = <<<XML
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- This is an Phing build.xml file, not an Ant one -->
-<project name="$projectname" default="archive" basedir=".">
-	<property name="project" value="$projectname" />
-	<property name="phpsupportDir" value="./$buildtoolsRelDir" />
-	<property name="buildrepository" value="## enter build repository destination here - user@server:/dir ##" />
-	<import file="\${phpsupportDir}/build-support.xml" />
-</project>
-
-XML;
-
-echo "\nWriting the following to $dir/build.xml:\n\n";
-echo "----------------------\n$source\n----------------------\n";
-
-file_put_contents("$dir/build.xml", $source);
+passhtru("./newproject " . escapeshellarg($dir) . " " . escapeshellarg($buildtoolsRelDir));
