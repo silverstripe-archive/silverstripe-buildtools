@@ -13,4 +13,5 @@ This script is designed for SilverStripe.\n";
 
 $buildtoolsRelDir = substr($buildtoolsDir, strlen($dir)+1);
 
-passhtru("./newproject " . escapeshellarg($dir) . " " . escapeshellarg($buildtoolsRelDir));
+$scriptDir = dirname(__FILE__);
+passthru("$scriptDir/newproject " . escapeshellarg($dir) . " " . escapeshellarg($buildtoolsRelDir));
