@@ -4,12 +4,18 @@
 	Place this in your project root and check the buildtools repository out as ./buildtools
 -->
 <project name="imported">
+    <!-- task definitions -->
+    <taskdef name="loadmodules" classname="LoadModulesTask" classpath="${phpsupportDir}" />
+
+    <!-- configuration -->
 	<property name="basedir" value="." />
     <property name="artifactsDir" value="${basedir}/_artifacts" description="Base dir for all output of build commands" />
     <property name="phpunitVer" value="3.4" />
     <property name="phpunit" value="phpunit" />
-    <property name="phpsupportDir" value="${basedir}/buildtools" />
     <property name="phpunitExcludes" value="" />
+    
+    <!-- module management definition file --> 
+    <property name="dependent-modules-file" value=".modules" />
 
 	<!-- Archives the base folder as a *.tar.gz or *.zip, without version information -->
 	<target name="archive" if="buildname">
@@ -142,4 +148,14 @@
         <zip destfile="${artifactsDir}/coverage.zip" basedir="${artifactsDir}/phpunit/report" whenempty="skip" />
         <echo message="##teamcity[publishArtifacts '${artifactsDir}/coverage.zip']" />
     </target>
+    
+    <!-- module management -->
+
+	<!-- Load modules where sensitive dependency exists -->
+	
+	
+	<target name="checkout">
+		<loadmodules file="${basedir}/${dependent-modules-file}" noninteractive="true"/>
+	</target>
+
 </project>
