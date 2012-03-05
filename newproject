@@ -60,7 +60,7 @@ echo "----------------------\n$source\n----------------------\n";
 
 file_put_contents("$projectDir/build.xml", $source);
 
-$modulesSource = "tools/buildtools:master git@gitorious.silverstripe.com:ss-tools/buildtools.git
+$modulesSource = "buildtools:master ssh://git@gitorious.silverstripe.com:2222/ss-tools/buildtools.git
 sapphire:master git@github.com:silverstripe/sapphire.git
 cms:master git@github.com:silverstripe/silverstripe-cms.git
 ";
