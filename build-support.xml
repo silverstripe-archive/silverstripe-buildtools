@@ -27,7 +27,7 @@
 		<property name="archivename" value="${artifactsDir}/${project}-${buildname}.tar.gz" />
 
 		<!-- Copy into a new folder before creating tar, excluding unnecessary file -->
-		<copy todir="${tmp}/aa-${buildname}">
+		<copy todir="${tmp}/${buildname}">
 			<fileset dir="${basedir}">
 				<include name="**/**" />
 				<exclude name="assets/**" />
