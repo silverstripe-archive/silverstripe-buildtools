@@ -12,6 +12,8 @@ It requires Phing, and provides the following features:
 
 As well as using it to manage the main SilverStripe download, it can used to manage SilverStripe projects.
 
+**Note:** This repository is a work in progress, and is likely to change a fair bit in the coming weeks.
+
 How to use this repository
 --------------------------
 
