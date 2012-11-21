@@ -31,10 +31,14 @@ class FindRepositoriesTask extends Task {
 			// get each git entry
 			while (false !== ($file = readdir($handle))) {
 				if ($file == "." || $file == "..") continue;
-				//var_dump($file);
 				if ($file == '.git' && is_dir($file))  {
-					if (file_exists($dir.'/'.$file.'/HEAD')) {
-						$result[] = $dir;   //$dir is a git repository
+					if (
+						// valid git repo?
+						file_exists($dir.'/'.$file.'/HEAD') 
+						// ... and contains a _config.php (SS module) or index.php (weak indicator for installer)
+						&& (file_exists($dir.'/_config.php') || file_exists($dir.'/index.php'))
+					) {
+						$result[] = $dir;
 					}
 				} else {
 					$path = $dir.'/'.$file;
