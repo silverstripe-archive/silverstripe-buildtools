@@ -339,7 +339,7 @@ Options:
 		</if>
 
 		<!-- clear the temp file -->
-		<delete file="${tmp}" failonerror="false" quiet="true" />
+		<delete dir="${tmp}" failonerror="false" quiet="true" />
 
 	</target>
 	
