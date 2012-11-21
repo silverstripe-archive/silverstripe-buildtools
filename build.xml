@@ -202,6 +202,7 @@ Options:
 			<fileset dir="${basedir}">
 				<include name="**/**" />
 				<exclude name="assets/**" />
+				<exclude name="buildtools/**" />
 				<exclude name="mysite/local.conf.php" />
 				<exclude name="mysite/db.conf.php" />
 				<exclude name="**/*.log" />
@@ -233,6 +234,7 @@ Options:
 			<fileset dir="${basedir}">
 				<include name="**/**" />
 				<exclude name="assets/**" />
+				<exclude name="buildtools/**" />
 				<exclude name="mysite/local.conf.php" />
 				<exclude name="mysite/db.conf.php" />
 				<exclude name="**/*.log" />
