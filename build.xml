@@ -9,15 +9,14 @@ phing help
 
 -->
 
-<project name="silverstripe-installer" default="tag" phingVersion="2.4.5">
+<project name="buildtools" phingVersion="2.4.5">
 
 	<!-- Load in the custom tasks -->
-	<taskdef name="findRepos" classname="tools.FindRepositoriesTask" classpath="${project.basedir}" />
-	<taskdef name="ssmodules" classname="tools.LoadModulesTask" classpath="${project.basedir}" />
-	<taskdef name="sschanglog" classname="tools.CreateChangelog" classpath="${project.basedir}" />
-	<taskdef name="gitstash" classname="tools.GitStashTask" classpath="${project.basedir}" />
-	<taskdef name="updateTranslationsTask" classname="tools.UpdateTranslationsTask" classpath="${project.basedir}" />
-
+	<taskdef name="findRepos" classname="src.FindRepositoriesTask" classpath="${phing.dir.buildtools}" />
+	<taskdef name="ssmodules" classname="src.LoadModulesTask" classpath="${phing.dir.buildtools}" />
+	<taskdef name="sschanglog" classname="src.CreateChangelog" classpath="${phing.dir.buildtools}" />
+	<taskdef name="gitstash" classname="src.GitStashTask" classpath="${phing.dir.buildtools}" />
+	<taskdef name="updateTranslationsTask" classname="src.UpdateTranslationsTask" classpath="${phing.dir.buildtools}" />
 	<property name="basedir" value="." override="true" />
 	<property name="changelog-definitions-file" value="changelog-definitions" override="true" />
 	<property name="ni_build" value="false" override="true"/>   <!-- Prompt if local changes would be overwritten by update -->
@@ -99,7 +98,7 @@ Options:
 	</target>
 
 	<target name="_createChangelogDefinitionsFile" unless="changelog-definitions-file-exists">
-		<copy file="${changelog-definitions-file}.default" tofile="${changelog-definitions-file}" />
+		<copy file="${phing.dir.buildtools}/${changelog-definitions-file}.default" tofile="${basedir}/${changelog-definitions-file}" />
 	</target>
 
 	<!-- 
