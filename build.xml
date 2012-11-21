@@ -192,12 +192,13 @@ Options:
 			</else>
 		</if>
 
-		<!-- Copy into a new folder, and tar the whole folder in order to avoid toplevel extracts -->
 		<php function="sys_get_temp_dir" returnProperty="systmp" />
-
+		<php expression="version_compare('${version}', '3.0', '&lt;=')" returnProperty="versionLowerThan3x" />
 		<property name="tmp" value="${systmp}/archiveTask/" />
+
 		<delete dir="${tmp}" failonerror="false" quiet="true" />
 
+		<!-- Copy into a new folder, and tar the whole folder in order to avoid toplevel extracts -->
 		<copy todir="${tmp}/${archivename}-cms-v${version}">
 			<fileset dir="${basedir}">
 				<include name="**/**" />
@@ -208,14 +209,15 @@ Options:
 				<exclude name="**/*.log" />
 				<exclude name="**/.svn/**" />
 				<exclude name="**/.git/**" />
-				<exclude name="**/.project" />  <!-- remove eclipse configuration file -->
+				<exclude name="**/.project" />
 				<exclude name="**/.buildpath" />
 				<exclude name="**/.settings" />
-				<exclude name="**/.idea/**" />  <!-- remove phpstorm configuration file -->
+				<exclude name="**/.idea/**" />
 				<exclude name="tools/**" />
 				<exclude name="**/tests/**" />
 				<exclude name="cms/docs/**" />
 				<exclude name="framework/docs/**" />
+				<exclude name="sapphire/docs/**" />
 				<exclude name="build.xml" />
 				<exclude name="changelog-definitions*" />
 				<exclude name="_ss_environment.php" />
@@ -230,52 +232,24 @@ Options:
 				<include name="assets/web.config" />
 			</fileset>
 		</copy>
-		<copy todir="${tmp}/${archivename}-framework-v${version}">
-			<fileset dir="${basedir}">
-				<include name="**/**" />
-				<exclude name="assets/**" />
-				<exclude name="buildtools/**" />
-				<exclude name="mysite/local.conf.php" />
-				<exclude name="mysite/db.conf.php" />
-				<exclude name="**/*.log" />
-				<exclude name="**/.svn/**" />
-				<exclude name="**/.git/**" />
-				<exclude name="**/.project" />  <!-- remove eclipse configuration file -->
-				<exclude name="**/.buildpath" />
-				<exclude name="**/.settings" />
-				<exclude name="**/.idea/**" />  <!-- remove phpstorm configuration file -->
-				<exclude name="tools/**" />
-				<exclude name="**/tests/**" />
-				<exclude name="cms/docs/**" />
-				<exclude name="framework/docs/**" />
-				<exclude name="build.xml" />
-				<exclude name="changelog-definitions*" />
-				<exclude name="_ss_environment.php" />
-				<exclude name="*.tar.gz" />
-				<exclude name="*.zip" />
-				<exclude name="behat.yml" />
-				<exclude name="composer.*" />
-				<exclude name="cms/**" />
-			</fileset>
-			<fileset dir="${basedir}">
-				<include name="assets/Uploads" />
-				<include name="assets/.htaccess" />
-				<include name="assets/web.config" />
-			</fileset>
-		</copy>
-
 
 		<!-- Write version info to the core folders (shouldn't be in version control) -->
-		<echo msg="${version}" file="${tmp}/${archivename}-cms-v${version}/framework/silverstripe_version" />
-		<echo msg="${version}" file="${tmp}/${archivename}-cms-v${version}/cms/silverstripe_version" />
-		<echo msg="${version}" file="${tmp}/${archivename}-cms-v${version}/framework/silverstripe_version" />
+		<if>
+			<istrue value="${versionLowerThan3x}" />
+			<then>
+				<echo msg="${version}" file="${tmp}/${archivename}-cms-v${version}/sapphire/silverstripe_version" />
+				<echo msg="${version}" file="${tmp}/${archivename}-cms-v${version}/cms/silverstripe_version" />
+			</then>
+			<else>
+				<echo msg="${version}" file="${tmp}/${archivename}-cms-v${version}/framework/silverstripe_version" />
+				<echo msg="${version}" file="${tmp}/${archivename}-cms-v${version}/cms/silverstripe_version" />
+			</else>
+		</if>
 
 		<!-- remove any pre-existing archives -->
 		<delete file="${archivedest}/${archivename}-cms-v${version}.tar.gz" failonerror="false" quiet="true" />
 		<delete file="${archivedest}/${archivename}-cms-v${version}.zip" failonerror="false" quiet="true" />
-		<delete file="${archivedest}/${archivename}-framework-v${version}.tar.gz" failonerror="false" quiet="true" />
-		<delete file="${archivedest}/${archivename}-framework-v${version}.zip" failonerror="false" quiet="true" />
-		
+
 		<!-- create tar archive - CMS -->
 		<tar destfile="${archivedest}/${archivename}-cms-v${version}.tar.gz" compression="gzip">
 			<fileset dir="${tmp}">
@@ -289,23 +263,6 @@ Options:
 				<include name="${archivename}-cms-v${version}/**" />
 			</fileset>
 		</zip>
-		
-		<!-- create tar archive - Framework -->
-		<tar destfile="${archivedest}/${archivename}-framework-v${version}.tar.gz" compression="gzip">
-			<fileset dir="${tmp}">
-				<include name="${archivename}-framework-v${version}/**" />
-			</fileset>
-		</tar>
-
-		<!-- create zip archive - Framework -->
-		<zip destfile="${archivedest}/${archivename}-framework-v${version}.zip">
-			<fileset dir="${tmp}">
-				<include name="${archivename}-framework-v${version}/**" />
-			</fileset>
-		</zip>
-
-		<!-- clear the temp file -->
-		<delete file="${tmp}" failonerror="false" quiet="true" />
 
 		<echo msg="Created archive: ${archivedest}/${archivename}-cms-v${version}.tar.gz" />
 		<echo msg="##teamcity[publishArtifacts '${archivename}-cms-v${version}.tar.gz']" />
@@ -313,11 +270,77 @@ Options:
 		<echo msg="Created archive: ${archivedest}/${archivename}-cms-v${version}.zip" />
 		<echo msg="##teamcity[publishArtifacts '${archivename}-cms-v${version}.zip']" />
 
-		<echo msg="Created archive: ${archivedest}/${archivename}-framework-v${version}.tar.gz" />
-		<echo msg="##teamcity[publishArtifacts '${archivename}-framework-v${version}.tar.gz']" />
+		<if>
+			<not><istrue value="${versionLowerThan3x}" /></not>
+			<then>
+				<!-- Copy into a new folder, and tar the whole folder in order to avoid toplevel extracts -->
+				<copy todir="${tmp}/${archivename}-framework-v${version}">
+					<fileset dir="${basedir}">
+						<include name="**/**" />
+						<exclude name="assets/**" />
+						<exclude name="buildtools/**" />
+						<exclude name="mysite/local.conf.php" />
+						<exclude name="mysite/db.conf.php" />
+						<exclude name="**/*.log" />
+						<exclude name="**/.svn/**" />
+						<exclude name="**/.git/**" />
+						<exclude name="**/.project" />
+						<exclude name="**/.buildpath" />
+						<exclude name="**/.settings" />
+						<exclude name="**/.idea/**" />
+						<exclude name="tools/**" />
+						<exclude name="**/tests/**" />
+						<exclude name="cms/docs/**" />
+						<exclude name="framework/docs/**" />
+						<exclude name="sapphire/docs/**" />
+						<exclude name="build.xml" />
+						<exclude name="changelog-definitions*" />
+						<exclude name="_ss_environment.php" />
+						<exclude name="*.tar.gz" />
+						<exclude name="*.zip" />
+						<exclude name="behat.yml" />
+						<exclude name="composer.*" />
+						<exclude name="cms/**" />
+					</fileset>
+					<fileset dir="${basedir}">
+						<include name="assets/Uploads" />
+						<include name="assets/.htaccess" />
+						<include name="assets/web.config" />
+					</fileset>
+				</copy>
 
-		<echo msg="Created archive: ${archivedest}/${archivename}-framework-v${version}.tar.gz" />
-		<echo msg="##teamcity[publishArtifacts '${archivename}-framework-v${version}.zip']" />
+				<!-- Write version info to the core folders (shouldn't be in version control) -->
+				<echo msg="${version}" file="${tmp}/${archivename}-framework-v${version}/framework/silverstripe_version" />
+
+				<!-- remove any pre-existing archives -->
+				<delete file="${archivedest}/${archivename}-framework-v${version}.tar.gz" failonerror="false" quiet="true" />
+				<delete file="${archivedest}/${archivename}-framework-v${version}.zip" failonerror="false" quiet="true" />
+
+				<!-- create tar archive - Framework -->
+				<tar destfile="${archivedest}/${archivename}-framework-v${version}.tar.gz" compression="gzip">
+					<fileset dir="${tmp}">
+						<include name="${archivename}-framework-v${version}/**" />
+					</fileset>
+				</tar>
+
+				<!-- create zip archive - Framework -->
+				<zip destfile="${archivedest}/${archivename}-framework-v${version}.zip">
+					<fileset dir="${tmp}">
+						<include name="${archivename}-framework-v${version}/**" />
+					</fileset>
+				</zip>
+
+				<echo msg="Created archive: ${archivedest}/${archivename}-framework-v${version}.tar.gz" />
+				<echo msg="##teamcity[publishArtifacts '${archivename}-framework-v${version}.tar.gz']" />
+
+				<echo msg="Created archive: ${archivedest}/${archivename}-framework-v${version}.tar.gz" />
+				<echo msg="##teamcity[publishArtifacts '${archivename}-framework-v${version}.zip']" />
+			</then>
+		</if>
+
+		<!-- clear the temp file -->
+		<delete file="${tmp}" failonerror="false" quiet="true" />
+
 	</target>
 	
 	<target name="upload-release"
@@ -330,10 +353,24 @@ Options:
 		<property name="release_dest" value="qa-servers@homer:/sites/ssorg-v2/www/assets/releases/" />
 		<property name="release_url" value="http://silverstripe.org/assets/releases/" />
 		<property name="release_notify_list" value="all@silverstripe.com,everyone@silverstripe.com.au" />
+		<php expression="version_compare('${version}', '3.0', '&lt;=')" returnProperty="versionLowerThan3x" />
 	
-		<exec command="scp -P 2222 SilverStripe-cms-v${version}.tar.gz SilverStripe-framework-v${version}.tar.gz SilverStripe-cms-v${version}.zip SilverStripe-framework-v${version}.zip ${release_dest}" checkreturn="true" logoutput="true" />
+		<if>
+			<istrue value="${versionLowerThan3x}" />
+			<then>
+				<exec command="scp -P 2222 SilverStripe-cms-v${version}.tar.gz SilverStripe-framework-v${version}.tar.gz SilverStripe-cms-v${version}.zip SilverStripe-framework-v${version}.zip ${release_dest}" checkreturn="true" logoutput="true" />
+				<mail from="reports@silverstripe.com" tolist="${release_notify_list}" subject="SilverStripe ${version} has been uploaded">A new SilverStripe release is ready, and although it hasn't been publicly announced yet, is available at the following locations:
+			
+${release_url}SilverStripe-cms-v${version}.tar.gz
+${release_url}SilverStripe-cms-v${version}.zip
 
-		<mail from="reports@silverstripe.com" tolist="${release_notify_list}" subject="SilverStripe ${version} has been uploaded">A new SilverStripe release is ready, and although it hasn't been publicly announced yet, is available at the following locations:
+Thanks,
+Your friendly automated release script.
+				</mail>
+			</then>
+			<else>
+				<exec command="scp -P 2222 SilverStripe-cms-v${version}.tar.gz SilverStripe-cms-v${version}.zip ${release_dest}" checkreturn="true" logoutput="true" />
+				<mail from="reports@silverstripe.com" tolist="${release_notify_list}" subject="SilverStripe ${version} has been uploaded">A new SilverStripe release is ready, and although it hasn't been publicly announced yet, is available at the following locations:
 			
 ${release_url}SilverStripe-cms-v${version}.tar.gz
 ${release_url}SilverStripe-framework-v${version}.tar.gz
@@ -342,8 +379,10 @@ ${release_url}SilverStripe-framework-v${version}.zip
 
 Thanks,
 Your friendly automated release script.
-</mail>
-		
+				</mail>
+			</else>
+		</if>
+
 	</target>
 
 	<target name="upload-nightly"
