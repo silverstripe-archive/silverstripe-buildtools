@@ -394,7 +394,7 @@ Options:
 		<if>
 			<istrue value="${versionLowerThan3x}" />
 			<then>
-				<exec command="scp -P 2222 SilverStripe-cms-v${version}.tar.gz SilverStripe-framework-v${version}.tar.gz SilverStripe-cms-v${version}.zip SilverStripe-framework-v${version}.zip ${release_dest}" checkreturn="true" logoutput="true" />
+				<exec command="scp -P 2222 SilverStripe-cms-v${version}.tar.gz SilverStripe-cms-v${version}.zip ${release_dest}" checkreturn="true" logoutput="true" />
 				<mail from="reports@silverstripe.com" tolist="${release_notify_list}" subject="SilverStripe ${version} has been uploaded">A new SilverStripe release is ready, and although it hasn't been publicly announced yet, is available at the following locations:
 			
 ${release_url}SilverStripe-cms-v${version}.tar.gz
@@ -405,7 +405,7 @@ Your friendly automated release script.
 				</mail>
 			</then>
 			<else>
-				<exec command="scp -P 2222 SilverStripe-cms-v${version}.tar.gz SilverStripe-cms-v${version}.zip ${release_dest}" checkreturn="true" logoutput="true" />
+				<exec command="scp -P 2222 SilverStripe-cms-v${version}.tar.gz SilverStripe-framework-v${version}.tar.gz SilverStripe-cms-v${version}.zip SilverStripe-framework-v${version}.zip ${release_dest}" checkreturn="true" logoutput="true" />
 				<mail from="reports@silverstripe.com" tolist="${release_notify_list}" subject="SilverStripe ${version} has been uploaded">A new SilverStripe release is ready, and although it hasn't been publicly announced yet, is available at the following locations:
 			
 ${release_url}SilverStripe-cms-v${version}.tar.gz
