@@ -344,7 +344,7 @@ Options:
 	</target>
 
 	<target name="create-composer-lock" 
-		description="Creates composer.lock file which locks dependencies for usage with 'composer create-project'. Needs to run AFTER tagging the core modules (and pushing those tags)">
+		description="Creates composer.lock file which locks dependencies for usage with 'composer create-project'. Needs to run AFTER tagging the core modules (and pushing those tags). Tags the installer project only.">
 
 		<php function="sys_get_temp_dir" returnProperty="systmp" />
 
@@ -358,7 +358,7 @@ Options:
 		<exec command="composer create-project -n --prefer-dist silverstripe/installer ${systmp}/_composerTmp ${composerVersion}" passthru="true" checkreturn="true" />
 		<copy file="${systmp}/_composerTmp/composer.lock" tofile="${basedir}/composer.lock" />
 		<delete dir="${systmp}/_composerTmp" />
-		<exec command="git add composer.lock &amp;&amp; git commit -m 'Added composer.lock for ${version}'" passthru="true" checkreturn="true" />
+		<exec command="git add -f composer.lock &amp;&amp; git commit -m 'Added composer.lock for ${version}'" passthru="true" checkreturn="true" />
 		<exec command="git tag ${version}" passthru="true" checkreturn="true" />
 		<echo msg="Tagged ${version}" />
 		<exec command="git rm composer.lock &amp;&amp; git commit -m 'Removed composer.lock'" passthru="true" checkreturn="true" />
