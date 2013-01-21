@@ -509,6 +509,11 @@ ${release_url}SilverStripe-framework-v${version}.zip
 	<target name="translations-mergeback"
 		description="Copies changes from the translation staging branch back to the current branch. Doesn't use 'git merge' because the staging branch works on master. Usage: phing -Dmodule=[module] translations-mergeback">
 
+		<if>
+			<not><isset property="branch"/></not>
+			<then><input propertyName="branch" defaultValue="3.0" promptChar=":">Please choose a branch to merge back to</input></then>
+		</if>
+
 		<php function="sys_get_temp_dir" returnProperty="systmp" />
 		<property name="tmp" value="${systmp}/translationsMergebackTask/" />
 		<exec command="git fetch origin" dir="${module}" checkreturn="true" />
@@ -517,7 +522,7 @@ ${release_url}SilverStripe-framework-v${version}.zip
 		<copy todir="${tmp}/${module}">
 			<fileset dir="${module}/lang" />
 		</copy>
-		<exec command="git checkout 3.0" dir="${module}" checkreturn="true" />
+		<exec command="git checkout ${branch}" dir="${module}" checkreturn="true" />
 		<copy todir="${module}/lang" overwrite="true">
 			<fileset dir="${tmp}/${module}/" />
 		</copy>
