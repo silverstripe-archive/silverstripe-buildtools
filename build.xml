@@ -12,11 +12,11 @@ phing help
 <project name="buildtools" phingVersion="2.4.5">
 
 	<!-- Load in the custom tasks -->
-	<taskdef name="findRepos" classname="src.FindRepositoriesTask" classpath="${phing.dir.buildtools}" />
-	<taskdef name="ssmodules" classname="src.LoadModulesTask" classpath="${phing.dir.buildtools}" />
-	<taskdef name="sschanglog" classname="src.CreateChangelog" classpath="${phing.dir.buildtools}" />
-	<taskdef name="gitstash" classname="src.GitStashTask" classpath="${phing.dir.buildtools}" />
-	<taskdef name="updateTranslationsTask" classname="src.UpdateTranslationsTask" classpath="${phing.dir.buildtools}" />
+	<taskdef name="findRepos" classname="buildtools.src.FindRepositoriesTask" />
+	<taskdef name="ssmodules" classname="buildtools.src.LoadModulesTask" />
+	<taskdef name="sschanglog" classname="buildtools.src.CreateChangelog" />
+	<taskdef name="gitstash" classname="buildtools.src.GitStashTask" />
+	<taskdef name="updateTranslationsTask" classname="buildtools.src.UpdateTranslationsTask" />
 	<property name="basedir" value="." override="true" />
 	<property name="changelog-definitions-file" value="changelog-definitions" override="true" />
 	<property name="ni_build" value="false" override="true"/>   <!-- Prompt if local changes would be overwritten by update -->
