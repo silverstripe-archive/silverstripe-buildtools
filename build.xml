@@ -517,12 +517,12 @@ ${release_url}SilverStripe-framework-v${version}.zip
 		<php function="sys_get_temp_dir" returnProperty="systmp" />
 		<property name="tmp" value="${systmp}/translationsMergebackTask/" />
 		<exec command="git fetch origin" dir="${module}" checkreturn="true" />
-		<exec command="git branch --force --track translation-staging origin/translation-staging" dir="${module}" checkreturn="true" />
-		<exec command="git checkout translation-staging" dir="${module}" checkreturn="true" />
+		<exec command="git checkout origin/translation-staging" dir="${module}" checkreturn="true" />
 		<copy todir="${tmp}/${module}">
 			<fileset dir="${module}/lang" />
 		</copy>
-		<exec command="git checkout ${branch}" dir="${module}" checkreturn="true" />
+		<exec command="git branch --force --track translation-staging-${branch} origin/${branch}" dir="${module}" checkreturn="true" />
+		<exec command="git checkout translation-staging-${branch}" dir="${module}" checkreturn="true" />
 		<copy todir="${module}/lang" overwrite="true">
 			<fileset dir="${tmp}/${module}/" />
 		</copy>
@@ -530,7 +530,20 @@ ${release_url}SilverStripe-framework-v${version}.zip
 		<exec command="git add lang/*" dir="${module}" passthru="true" checkreturn="true" />
 		<exec command="git commit -m 'Updated translations'" dir="${module}" passthru="true" checkreturn="true" />
 
-		<echo msg="Done! Please review the commit before pushing it, ensure no malicious code has been injected." />
+		<if>
+			<not><isset property="pushToOrigin"/></not>
+			<then>
+				<input propertyName="pushToOrigin" defaultValue="yes" validArgs="yes,no" promptChar=":">Please ensure ensure no malicious code has been injected in the YAML files. Push to origin?</input>
+			</then>
+		</if>
+		<if>
+			<equals arg1="${pushToOrigin}" arg2="yes" casesensitive="false" trim="true"/>
+			<then>
+				<exec command="git push origin" passthru="true" checkreturn="true" dir="${module}" />
+			</then>
+		</if>
+
+		<exec command="git checkout master" dir="${module}" checkreturn="true" />
 
 	</target>
 
