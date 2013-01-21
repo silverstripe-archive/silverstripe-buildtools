@@ -193,9 +193,9 @@ class UpdateTranslationsTask extends SilverStripeBuildTask {
 
 		// Parse YML as a sanity check,
 		// and reorder alphabetically by key to ensure consistent diffs.
-		require_once dirname(__FILE__) . '/../framework/thirdparty/zend_translate_railsyaml/library/Translate/Adapter/thirdparty/sfYaml/lib/sfYaml.php';
-		require_once dirname(__FILE__) . '/../framework/thirdparty/zend_translate_railsyaml/library/Translate/Adapter/thirdparty/sfYaml/lib/sfYamlParser.php';
-		require_once dirname(__FILE__) . '/../framework/thirdparty/zend_translate_railsyaml/library/Translate/Adapter/thirdparty/sfYaml/lib/sfYamlDumper.php';
+		require_once dirname(__FILE__) . '/../../framework/thirdparty/zend_translate_railsyaml/library/Translate/Adapter/thirdparty/sfYaml/lib/sfYaml.php';
+		require_once dirname(__FILE__) . '/../../framework/thirdparty/zend_translate_railsyaml/library/Translate/Adapter/thirdparty/sfYaml/lib/sfYamlParser.php';
+		require_once dirname(__FILE__) . '/../../framework/thirdparty/zend_translate_railsyaml/library/Translate/Adapter/thirdparty/sfYaml/lib/sfYamlDumper.php';
 		$yamlHandler = new sfYaml();
 		$yml = $yamlHandler->load($content);
 		if(isset($yml[$locale]) && is_array($yml[$locale])) {
