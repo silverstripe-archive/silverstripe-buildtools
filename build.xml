@@ -22,7 +22,7 @@ phing help
 	<property name="ni_build" value="false" override="true"/>   <!-- Prompt if local changes would be overwritten by update -->
 	<property name="changelogSort" value="type" override="true"/>
 	<property name="archivedest" value="." />
-	<available file="${changelog-definition-file}" property="changelog-definition-file-exists" />
+	<available file="${changelog-definitions-file}" property="changelog-definitions-file-exists" />
 
 	<!-- 
 		=================================================================
@@ -98,7 +98,7 @@ Options:
 	</target>
 
 	<target name="_createChangelogDefinitionsFile" unless="changelog-definitions-file-exists">
-		<copy file="${phing.dir.buildtools}/${changelog-definitions-file}.default" tofile="${basedir}/${changelog-definitions-file}" />
+		<copy file="${phing.dir}/buildtools/${changelog-definitions-file}.default" tofile="${basedir}/${changelog-definitions-file}" />
 	</target>
 
 	<!-- 
