@@ -529,6 +529,7 @@ ${release_url}SilverStripe-framework-v${version}.zip
 
 		<exec command="git add lang/*" dir="${module}" passthru="true" checkreturn="true" />
 		<exec command="git commit -m 'Updated translations'" dir="${module}" passthru="true" checkreturn="true" />
+		<exec command="git show" dir="${module}" passthru="true" />
 
 		<if>
 			<not><isset property="pushToOrigin"/></not>
@@ -539,12 +540,12 @@ ${release_url}SilverStripe-framework-v${version}.zip
 		<if>
 			<equals arg1="${pushToOrigin}" arg2="yes" casesensitive="false" trim="true"/>
 			<then>
-				<exec command="git push origin" passthru="true" checkreturn="true" dir="${module}" />
+				<exec command="git push origin translation-staging-${branch}:${branch}" passthru="true" checkreturn="true" dir="${module}" />
 			</then>
 		</if>
 
-		<exec command="git checkout master" dir="${module}" checkreturn="true" />
-
+		<exec command="git checkout ${branch}" dir="${module}" checkreturn="true" />
+		<exec command="git pull" dir="${module}" checkreturn="true" />
 	</target>
 
 	<target name="translations-sync" 
