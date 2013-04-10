@@ -450,6 +450,7 @@ ${release_url}SilverStripe-framework-v${version}.zip
 			promptText="getlocalization password"
 			useExistingValue="true" />
 
+		<exec command="git branch --force --track master origin/master" dir="${module}" checkreturn="true" />
 		<exec command="git checkout master" dir="${module}" checkreturn="true" />
 		<exec command="git fetch origin" dir="${module}" checkreturn="true" />
 		<exec command="git branch --force --track translation-staging origin/translation-staging" dir="${module}" checkreturn="true" />
