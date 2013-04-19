@@ -30,7 +30,6 @@ Then install the project via [composer](http://getcomposer.org).
 	composer require silverstripe/buildtools
 
 
-
 ## Usage
 
 Run `phing -l` to see a full list of available targets,

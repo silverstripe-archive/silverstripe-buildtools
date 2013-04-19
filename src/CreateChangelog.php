@@ -2,7 +2,7 @@
 include_once dirname(__FILE__) . '/SilverStripeBuildTask.php';
 
 /**
- * Returns changelogs for the git (or svn) repositories specified in the changelog-definitions file
+ * Returns combined changelogs for specified git repositories.
  *
  * @author jseide
  *
@@ -21,14 +21,13 @@ class CreateChangelog extends SilverStripeBuildTask {
 		'API Changes' => array('/^(APICHANGE|API-CHANGE|API CHANGE|API)\s?:?/i'),
 		'Features and Enhancements' => array('/^(ENHANCEMENT|ENHNACEMENT|FEATURE|NEW)\s?:?/i'),
 		'Bugfixes' => array('/^(BUGFIX|BUGFUX|BUG|FIX)\s?:?/','/^(BUG FIX)\s?:?/'),
-		'Other' => array('/^(MINOR)\s?:?/i')
+		// 'Other' => array('/^(MINOR)\s?:?/i')
 	);
 	
 	public $commitUrls = array(
 		'.' => 'https://github.com/silverstripe/silverstripe-installer/commit/%s',
 		'framework' => 'https://github.com/silverstripe/sapphire/commit/%s',
 		'cms' => 'https://github.com/silverstripe/silverstripe-cms/commit/%s',
-		'themes/simple' => 'https://github.com/silverstripe-themes/silverstripe-simple/commit/%s',
 	);
 	
 	public $ignoreRules = array(
@@ -39,6 +38,16 @@ class CreateChangelog extends SilverStripeBuildTask {
 		'/^NOTFORMERGE/',
 		'/^\s*$/'
 	);
+
+	public $paths = array(
+		'.',
+		'framework',
+		'cms'
+	);
+
+	public $fromCommit;
+
+	public $toCommit;
 
 	public function setDefinitions($definitions) {
 		$this->definitions  = $definitions;
@@ -56,44 +65,16 @@ class CreateChangelog extends SilverStripeBuildTask {
 		$this->filter = $filter;
 	}
 
-	/**
-	 * Checks is a folder is a version control repository
-	 */
-	protected function isRepository($dir_path, $filter) {
-		$dir = $dir_path;
-
-		if (file_exists($dir)) {
-			// open this directory
-			if ($handle = opendir($dir)) {
-
-				// get each file
-				while (false !== ($file = readdir($handle))) {
-					if ($file == $filter && is_dir($file))  {
-						if ($filter == '.git') {    //extra check for git repos
-							if (file_exists($dir.'/'.$file.'/HEAD')) {
-								return true;   //$dir is a git repository
-							}
-						} else {    //return true for .svn repos
-							return true;
-						}
-					}
-				}
-
-				echo "Folder '$dir' is not a $filter repository\n";
-			}
-		} else {
-			echo "Folder '$dir' does not exist\n";
-		}
-
-		return false;
+	public function setPaths($paths) {
+		$this->paths = is_array($paths) ? $paths : explode(',', $paths);
 	}
 
-	protected function isGitRepo($dir) {
-		return $this->isRepository($dir, '.git');
+	public function setFromCommit($commit) {
+		$this->fromCommit = $commit;
 	}
 
-	protected function isSvnRepo($dir) {
-		return $this->isRepository($dir, '.svn');
+	public function setToCommit($commit) {
+		$this->toCommit = $commit;
 	}
 
 	protected function gitLog($path, $from = null, $to = null) {
@@ -151,10 +132,12 @@ class CreateChangelog extends SilverStripeBuildTask {
 					}
 				}
 			}
-			if(!$matched) {
-				if(!isset($groupedByType['Other'])) $groupedByType['Other'] = array();
-				$groupedByType['Other'][] = $commit;
-			}
+
+			// Don't show others, changelog gets too long
+			// if(!$matched) {
+			// 	if(!isset($groupedByType['Other'])) $groupedByType['Other'] = array();
+			// 	$groupedByType['Other'][] = $commit;
+			// }
 			
 		}
 		
@@ -189,47 +172,11 @@ class CreateChangelog extends SilverStripeBuildTask {
 		
 		chdir($this->baseDir);  //change current working directory
 
-		//parse the definitions file
-		$items = file($this->definitions);
-		$repos = array();   //git (or svn) repos to scan
-		foreach ($items as $item) {
-			$item = trim($item);
-			if (strpos($item, '#') === 0) {
-				continue;
-			}
-
-			$bits = preg_split('/\s+/', $item);
-
-			if (count($bits) == 1) {
-				$repos[$bits[0]] = "";
-			} elseif (count($bits) == 2) {
-				$repos[$bits[0]] = array($bits[1], null);    //framework => array(from => HEAD)
-			} elseif (count($bits) == 3) {
-				$repos[$bits[0]] = array($bits[1],$bits[2]);    //framework => array(from => to)
-			} else {
-				continue;
-			}
-		}
-
-		//check all the paths are valid git repos
-		$gitRepos = array();
-		$svnRepos = array();
-		foreach($repos as $path => $range) {
-			if ($this->isGitRepo($path)) $gitRepos[$path] = $range; //add all git repos to a special array
-			//TODO: for svn support use the isSvnRepo() method to add repos to the svnRepos array
-		}
-
 		//run git log
 		$log = array();
-		foreach($gitRepos as $path => $range) {
+		foreach($this->paths as $path) {
 			$logForPath = array();
-			if (!empty($range)) {
-				$from = (isset($range[0])) ? $range[0] : null;
-				$to = (isset($range[1])) ? $range[1] : null;
-				$logForPath = explode("\n", $this->gitLog($path, $from, $to));
-			} else {
-				$logForPath = explode("\n", $this->gitLog($path));
-			}
+			$logForPath = explode("\n", $this->gitLog($path, $this->fromCommit, $this->toCommit));
 			foreach($logForPath as $commit) {
 				if(!$commit) continue;
 				$commitArr = $this->commitToArray($commit);
