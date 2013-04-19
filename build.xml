@@ -370,7 +370,7 @@ Options:
 		<if>
 			<istrue value="${versionLowerThan3x}" />
 			<then>
-				<exec command="scp -v -P 2222 SilverStripe-cms-v${tagName}.tar.gz SilverStripe-cms-v${tagName}.zip ${release_dest}" checkreturn="true" logoutput="true" />
+				<exec command="scp -P 2222 SilverStripe-cms-v${tagName}.tar.gz SilverStripe-cms-v${tagName}.zip ${release_dest}" checkreturn="true" logoutput="true" />
 				<echo>
 Successfully uploaded to:
 
@@ -379,7 +379,7 @@ ${release_url}SilverStripe-cms-v${tagName}.zip
 				</echo>
 			</then>
 			<else>
-				<exec command="scp -v -P 2222 SilverStripe-cms-v${tagName}.tar.gz SilverStripe-framework-v${tagName}.tar.gz SilverStripe-cms-v${tagName}.zip SilverStripe-framework-v${tagName}.zip ${release_dest}" checkreturn="true" logoutput="true" />
+				<exec command="scp -P 2222 SilverStripe-cms-v${tagName}.tar.gz SilverStripe-framework-v${tagName}.tar.gz SilverStripe-cms-v${tagName}.zip SilverStripe-framework-v${tagName}.zip ${release_dest}" checkreturn="true" logoutput="true" />
 				<echo>
 Successfully uploaded to:
 
