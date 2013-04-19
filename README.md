@@ -23,17 +23,33 @@ First of all, get started with phing:
 
 	pear channel-discover pear.phing.info
 	pear install phing/phing
-	pear install pear/VersionControl_Git-0.4.4
 
 Then install the project via [composer](http://getcomposer.org).
 
 	composer require silverstripe/buildtools
 
-
 ## Usage
 
 Run `phing -l` to see a full list of available targets,
 and `phing help` for in-depth help.
+
+The most important command is `phing release`. It roughly takes the following steps:
+
+ * Checks out the base release branch (e.g. `3.1`) for core modules and the installer
+ * Ensures no local changes are present
+ * Writes a combined changelog from core modules, and pushes the committed Markdown file
+ * Tags core modules and pushes those tags
+ * Temporarily overwrites the `composer.json` version constraints with the new tag,
+   and generates a `composer.lock` file by running `composer update`
+ * Pushes the `composer.lock` file, tags the release, and removes it again (it should just exist in the tag)
+ * Creates archives (separately for cms+framework and standalone framework)
+ * Uploads archives to `silverstripe.org`
+ * Checks out the base release branch again
+
+**Caution:** The task uses a lot of `--force` in its git commands, for example
+overwriting existing tags. It is your responsibility to ensure tag overwrites
+should indeed take place. While you can generally abort and restart the release task,
+it is recommended to start with a fresh composer project each time you run it.
 
 ## License ##
 
