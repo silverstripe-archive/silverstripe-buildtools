@@ -4,7 +4,6 @@
 
 sudo pear channel-discover pear.phing.info
 sudo pear install phing/phing
-sudo pear install pear/VersionControl_Git-0.4.4
 phing help
 
 -->
@@ -54,7 +53,7 @@ Options:
 		<echo msg=" * Release announcement on mailinglist and forum" />
 		<echo msg=" * Update silverstripe.org download links" />
 		<echo msg=" * Close milestones in the issue tracker" />
-		<echo msg=" * ... and more. See http://bert.silverstripe.com/groups/ss/wiki/06867/Open_Source_Release_Procedures.html" />
+		<echo msg=" * ... and more. See http://goo.gl/68pXb for instructions." />
 	</target>
 
 	<target name="setup">
@@ -65,7 +64,7 @@ Options:
 			useExistingValue="true"
 			defaultValue="x.y" />
 		<propertyprompt propertyName="tagName" 
-			promptText="Tag name?"
+			promptText="Tag name? Check http://goo.gl/1EDBJ for conventions"
 			useExistingValue="true"
 			defaultValue="x.y.z[-(alpha|beta|rc)]" />
 		<property name="tmpBranchName" value="${tagName}-tmp" override="true" />
@@ -74,14 +73,14 @@ Options:
 		<echo msg="### Checking out ${baseBranchName}" />
 		<property name="branchName" value="${baseBranchName}" override="true" />
 		<foreach list="${modules}" param="module" target="module-check-changes" />
-		<foreach list="${modulesAndRoot}" param="module" target="module-checkout" />
-		<foreach list="${modulesAndRoot}" param="module" target="module-pull" />
+		<foreach list="${modules}" param="module" target="module-fetch" />
+		<foreach list="${modules}" param="module" target="module-checkout" />
 	</target>
 
 	<target name="teardown">
 		<echo msg="### Checking out ${baseBranchName}" />
 		<property name="branchName" value="${baseBranchName}" override="true" />
-		<foreach list="${modulesAndRoot}" param="module" target="module-checkout" />
+		<foreach list="${modules}" param="module" target="module-checkout" />
 	</target>
 
 	<target name="tag"
@@ -109,7 +108,7 @@ Options:
 		<!-- TODO Prompt for overwriting existing branch -->
 		<echo msg="checking out ${module}"/>
 		<exec command="git stash" dir="${module}" />
-		<gitcheckout branchname="${baseBranchName}" forcecreate="true" repository="${module}" />
+		<exec command="git checkout -B ${baseBranchName} origin/${baseBranchName}" checkreturn="true" dir="${module}" />
 		<!-- <exec command="git stash pop" dir="${module}" /> -->
 		<echo msg="Checked out ${baseBranchName} tag/branch in '${module}' git repository" />
 	</target>
@@ -127,9 +126,9 @@ Options:
 		<echo msg="Pushed tags for '${module}'" />
 	</target>
 
-	<target name="module-pull" if="basedir,module" 
+	<target name="module-fetch" if="basedir,module" 
 		description="Fetches changes from git upstream">
-		<gitpull repository="${module}" />
+		<gitfetch repository="${module}" />
 	</target>
 
 	<target name="archive" if="basedir,tagName,archiveName" 
@@ -305,13 +304,12 @@ Options:
 		depends="setup"
 		if="tagName">
 
+		<echo msg="### Creating composer.lock" />
+
 		<trycatch>
 			<try>
 				<propertyprompt propertyName="confirmWaitForPackagist" 
 					promptText="Check that desired tag is synced to packagist.org. Ready to continue?" />
-				
-				<echo msg="### Creating composer.lock" />
-				<phingcall target="create-composer-lock" />
 
 				<php function="sys_get_temp_dir" returnProperty="systmp" />
 
@@ -323,20 +321,31 @@ Options:
 
 				<php expression="preg_replace('/(\d\.\d).*/', '$1.x-dev', '${tagName}')" returnProperty="composerVersion" />
 				<exec command="mv composer.json composer.json.orig" checkreturn="true" />
+				<!-- Temporarily edit composer.json in-place in order to generate correct composer.lock file. -->
 				<exec command="sed 's/${composerVersion}/${tagName}/' composer.json.orig > composer.json" checkreturn="true" />
 				<exec command="composer update --no-dev" passthru="true" checkreturn="true" />
-				<exec command="git add -f composer.lock" passthru="true" checkreturn="true" />
-				<exec command="git commit -m 'Added composer.lock for ${tagName}'" passthru="true" checkreturn="true" />
-				<gittag force="true" name="${tagName}" />
-				<echo msg="Tagged ${tagName}" />
-				<exec command="git rm composer.lock" passthru="true" checkreturn="true" />
-				<exec command="git commit -m 'Removed composer.lock'" passthru="true" checkreturn="true" />
 				<exec command="mv composer.json.orig composer.json" checkreturn="true" />
-
-				<propertyprompt propertyName="pushToOrigin" 
-					promptText="Check that the composer.lock points to the right versions. Ready to push and tag the installer?" />
-
-				<gitpush tags="true" force="true" />
+				<exec command="git status --short composer.lock" outputProperty="git.status.composerlock" />
+				<if>
+					<istrue value="${git.status.composerlock}" />
+					<then>
+						<exec command="git add -f composer.lock" passthru="true" checkreturn="true" />
+						<exec command="git commit -m 'Added composer.lock for ${tagName}'" passthru="true" checkreturn="true" />
+						<gittag force="true" name="${tagName}" repository="." />
+						<echo msg="Tagged ${tagName}" />
+						<exec command="git rm composer.lock" passthru="true" checkreturn="true" />
+						<exec command="git commit -m 'Removed composer.lock'" passthru="true" checkreturn="true" />
+						<propertyprompt propertyName="pushToOrigin" 
+							promptText="Check that the composer.lock points to the right versions. Ready to push and tag the installer?" />
+						<gitpush repository="." />
+						<gitpush tags="true" force="true" repository="." />
+					</then>
+					<else>
+						<echo msg="No changes to composer.lock, only re-tagging release." />
+						<gittag force="true" name="${tagName}" repository="." />
+						<gitpush tags="true" force="true" repository="." />
+					</else>
+				</if>
 			</try>
 			<finally>
 				<exec command="git checkout composer.json" checkreturn="true" />
@@ -357,7 +366,6 @@ Options:
 
 		<property name="release_dest" value="qa-servers@homer:/sites/ssorg-v2/www/assets/releases/" />
 		<property name="release_url" value="http://silverstripe.org/assets/releases/" />
-		<property name="release_notify_list" value="all@silverstripe.com,everyone@silverstripe.com.au" />
 	
 		<if>
 			<istrue value="${versionLowerThan3x}" />
@@ -429,9 +437,10 @@ ${release_url}SilverStripe-framework-v${tagName}.zip
 
 		<echo msg="# ${changelog.toCommit}${line.separator}${line.separator}# Overview${line.separator}${line.separator}TODO${line.separator}${changelogOutput}" file="framework/${changelog.path}" />
 		<echo msg="Written changelog to 'framework/${changelog.path}'." />
-		<input propertyname="_null" message="Now add a highlevel changelog to the file before I can commit it. Ready to commit?" />
+		<input propertyname="_null" message="Now add a highlevel changelog to the file before I can commit it. Ready to commit and push?" />
 		<exec command="git add ${changelog.path}" dir="framework" />
 		<exec command="git commit -m 'Added ${changelog.toCommit} changelog'" dir="framework" />
+		<gitpush repository="." />
 	</target>
 
 	<target name="translations-staging-setup">
