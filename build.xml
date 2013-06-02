@@ -476,7 +476,7 @@ ${release_url}SilverStripe-framework-v${tagName}.zip
 		depends="translations-staging-setup">
 		<exec command="git merge --strategy recursive -X theirs origin/master" dir="${module}" checkreturn="true" />
 		<exec command="php framework/cli-script.php dev/tasks/i18nTextCollectorTask module=${module} merge=true" passthru="true" checkreturn="true" />
-		<exec command="git status --short" dir="${module}" outputProperty="git.status.${module}" />
+		<exec command="git status --untracked-files=no --short" dir="${module}" outputProperty="git.status.${module}" />
 		<if>
 			<istrue value="${git.status.${module}}" />
 			<then>
@@ -502,7 +502,7 @@ ${release_url}SilverStripe-framework-v${tagName}.zip
 			glPassword="${getlocalization.${module}.password}"
 			modulePath="${module}" 
 		/>
-		<exec command="git status --short" dir="${module}" outputProperty="git.status.${module}" />
+		<exec command="git status --untracked-files=no --short" dir="${module}" outputProperty="git.status.${module}" />
 		<if>
 			<istrue value="${git.status.${module}}" />
 			<then>
