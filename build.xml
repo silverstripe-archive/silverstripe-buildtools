@@ -482,7 +482,7 @@ ${release_url}SilverStripe-framework-v${tagName}.zip
 			<then>
 				<exec command="git add lang/*" dir="${module}" passthru="true" checkreturn="true" />
 				<exec command="git commit -m 'MINOR Updated translations master'" dir="${module}" passthru="true" checkreturn="true" />
-				<exec command="git merge origin/master" dir="${module}" checkreturn="true" />
+				<exec command="git push origin translation-staging" passthru="true" checkreturn="true" dir="${module}" />
 			</then>
 		</if>
 	</target>
@@ -491,7 +491,6 @@ ${release_url}SilverStripe-framework-v${tagName}.zip
 		description="Pushes translation master files to getlocalization.com"
 		depends="translations-staging-setup">
 		<exec command="curl --fail --form file=@${module}/lang/en.yml --form name='lang/en.yml' --user ${getlocalization.${module}.user}:${getlocalization.${module}.password} https://api.getlocalization.com/${getlocalization.${module}.project}/api/update-master/" passthru="true" checkreturn="true" /> 
-		<exec command="git checkout master" dir="${module}" checkreturn="true" />
 	</target>
 
 	<target name="translations-update-gl-contribs" description="Update translations in working copy from getlocalization.com, and commit changes to a specialized branch and push to origin repository. Note: The API requests can take a couple of minutes."
@@ -560,7 +559,8 @@ ${release_url}SilverStripe-framework-v${tagName}.zip
 	</target>
 
 	<target name="translations-sync" 
-		description="Wrapper task to handle updating translations and master files, using the getlocalization.com API, committing to a specialized branch in the working copy and pushing to the origin repository. ">
+		description="Wrapper task to handle updating translations and master files, using the getlocalization.com API, committing to a specialized 'translation-staging' branch in the working copy and pushing to the origin repository. 
+		Does not commit or push to the master branch, use the 'translations-mergeback' task for this purpose.">
 		<foreach list="framework,cms" param="module" target="translations-update-git-masterfile" />
 		<foreach list="framework,cms" param="module" target="translations-update-gl-masterfile" />
 		<foreach list="framework,cms" param="module" target="translations-update-gl-contribs" />
