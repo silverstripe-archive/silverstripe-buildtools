@@ -537,20 +537,25 @@ ${release_url}SilverStripe-framework-v${tagName}.zip
 			<fileset dir="${tmp}/${module}/" />
 		</copy>
 
-		<exec command="git add lang/*" dir="${module}" passthru="true" checkreturn="true" />
-		<exec command="git commit -m 'Updated translations'" dir="${module}" passthru="true" checkreturn="true" />
-		<exec command="git show" dir="${module}" passthru="true" />
-
+		<exec command="git status --untracked-files=no --short" dir="${module}" outputProperty="git.status.${module}" />
 		<if>
-			<not><isset property="pushToOrigin"/></not>
+			<istrue value="${git.status.${module}}" />
 			<then>
-				<input propertyName="pushToOrigin" defaultValue="yes" validArgs="yes,no" promptChar=":">Please ensure ensure no malicious code has been injected in the YAML files. Push to origin?</input>
-			</then>
-		</if>
-		<if>
-			<equals arg1="${pushToOrigin}" arg2="yes" casesensitive="false" trim="true"/>
-			<then>
-				<exec command="git push origin translation-staging-${branch}:${branch}" passthru="true" checkreturn="true" dir="${module}" />
+				<exec command="git add lang/*" dir="${module}" passthru="true" checkreturn="true" />
+				<exec command="git commit -m 'Updated translations'" dir="${module}" passthru="true" checkreturn="true" />
+				<exec command="git show" dir="${module}" passthru="true" />
+				<if>
+					<not><isset property="pushToOrigin"/></not>
+					<then>
+						<input propertyName="pushToOrigin" defaultValue="yes" validArgs="yes,no" promptChar=":">Please ensure ensure no malicious code has been injected in the YAML files. Push to origin?</input>
+					</then>
+				</if>
+				<if>
+					<equals arg1="${pushToOrigin}" arg2="yes" casesensitive="false" trim="true"/>
+					<then>
+						<exec command="git push origin translation-staging-${branch} ${branch}" passthru="true" checkreturn="true" dir="${module}" />
+					</then>
+				</if>
 			</then>
 		</if>
 
