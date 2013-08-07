@@ -291,7 +291,7 @@ Options:
 
 	<target name="upload"
 		description="Uploads archives previously created through 'ping archive' to a public webhost, and notifies a group of people of the new release. Requires working public key auth on the release destination."
-		depends="setup"
+		depends="setup,archive"
 		if="tagName">
 
 		<echo msg="### Uploading archive" />
