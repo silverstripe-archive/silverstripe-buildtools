@@ -18,7 +18,8 @@ phing help
 	<property name="basedir" value="." override="true" />
 	<property name="archiveDest" value="." />
 	<property name="archiveName" value="SilverStripe" />
-	<property name="modules" value="framework,cms" />
+	<property name="frameworkdir" value="framework" />
+	<property name="modules" value="${frameworkdir},cms" />
 	<property name="modulesAndRoot" value=".,${modules}" />
 	<property name="changelog.toCommit" value="${baseBranchName}" />
 
@@ -48,7 +49,7 @@ Options:
 
 	<target name="release" 
 		description="Wrapper task to handle a release"
-		depends="setup,changelog,tag,composerlock,archive,upload,teardown">
+		depends="setup,changelog,tag,archive,upload,teardown">
 		<echo msg="### Done! Please do the following manually:" />
 		<echo msg=" * Release announcement on mailinglist and forum" />
 		<echo msg=" * Update silverstripe.org download links" />
@@ -87,8 +88,8 @@ Options:
 		description="Tag each module and push tags"
 		depends="setup">
 		<echo msg="### Creating tags" />
-		<foreach list="${modules}" param="module" target="module-create-tag" />
-		<foreach list="${modules}" param="module" target="module-push-tag" />
+		<foreach list="${modules},." param="module" target="module-create-tag" />
+		<foreach list="${modules},." param="module" target="module-push-tag" />
 	</target>
 
 	<target name="module-check-changes" if="basedir,module" 
@@ -160,8 +161,7 @@ Options:
 				<exclude name="tools/**" />
 				<exclude name="**/tests/**" />
 				<exclude name="cms/docs/**" />
-				<exclude name="framework/docs/**" />
-				<exclude name="sapphire/docs/**" />
+				<exclude name="${frameworkdir}/docs/**" />
 				<exclude name="build.xml" />
 				<exclude name="_ss_environment.php" />
 				<exclude name="*.tar.gz" />
@@ -178,17 +178,8 @@ Options:
 		</copy>
 
 		<!-- Write version info to the core folders (shouldn't be in version control) -->
-		<if>
-			<istrue value="${versionLowerThan3x}" />
-			<then>
-				<echo msg="${tagName}" file="${tmp}/${archiveName}-cms-v${tagName}/sapphire/silverstripe_version" />
-				<echo msg="${tagName}" file="${tmp}/${archiveName}-cms-v${tagName}/cms/silverstripe_version" />
-			</then>
-			<else>
-				<echo msg="${tagName}" file="${tmp}/${archiveName}-cms-v${tagName}/framework/silverstripe_version" />
-				<echo msg="${tagName}" file="${tmp}/${archiveName}-cms-v${tagName}/cms/silverstripe_version" />
-			</else>
-		</if>
+		<echo msg="${tagName}" file="${tmp}/${archiveName}-cms-v${tagName}/${frameworkdir}/silverstripe_version" />
+		<echo msg="${tagName}" file="${tmp}/${archiveName}-cms-v${tagName}/cms/silverstripe_version" />
 
 		<!-- remove any pre-existing archives -->
 		<delete file="${archiveDest}/${archiveName}-cms-v${tagName}.tar.gz" failonerror="false" quiet="true" />
@@ -235,8 +226,7 @@ Options:
 						<exclude name="tools/**" />
 						<exclude name="**/tests/**" />
 						<exclude name="cms/docs/**" />
-						<exclude name="framework/docs/**" />
-						<exclude name="sapphire/docs/**" />
+						<exclude name="${frameworkdir}/docs/**" />
 						<exclude name="build.xml" />
 						<exclude name="_ss_environment.php" />
 						<exclude name="*.tar.gz" />
@@ -254,7 +244,7 @@ Options:
 				</copy>
 
 				<!-- Write version info to the core folders (shouldn't be in version control) -->
-				<echo msg="${tagName}" file="${tmp}/${archiveName}-framework-v${tagName}/framework/silverstripe_version" />
+				<echo msg="${tagName}" file="${tmp}/${archiveName}-framework-v${tagName}/${frameworkdir}/silverstripe_version" />
 
 				<!-- remove any pre-existing archives -->
 				<delete file="${archiveDest}/${archiveName}-framework-v${tagName}.tar.gz" failonerror="false" quiet="true" />
@@ -299,61 +289,6 @@ Options:
 		<gitbranch forceremove="true" branchname="${branchName}" repository="${module}" />
 	</target>
 
-	<target name="composerlock" 
-		description="Creates composer.lock file which locks dependencies for usage with 'composer create-project'. Needs to run AFTER tagging the core modules (and pushing those tags). Tags the installer project only."
-		depends="setup"
-		if="tagName">
-
-		<echo msg="### Creating composer.lock" />
-
-		<trycatch>
-			<try>
-				<propertyprompt propertyName="confirmWaitForPackagist" 
-					promptText="Check that desired tag is synced to packagist.org. Ready to continue?" />
-
-				<php function="sys_get_temp_dir" returnProperty="systmp" />
-
-				<!-- TODO Check that tags exist already -->
-				<propertyprompt propertyName="tagName" 
-					promptText="Tag name?"
-					useExistingValue="true"
-					defaultValue="x.y.z[-(alpha|beta|rc)]" />
-
-				<php expression="preg_replace('/(\d\.\d).*/', '$1.x-dev', '${tagName}')" returnProperty="composerVersion" />
-				<exec command="mv composer.json composer.json.orig" checkreturn="true" />
-				<!-- Temporarily edit composer.json in-place in order to generate correct composer.lock file. -->
-				<exec command="sed 's/${composerVersion}/${tagName}/' composer.json.orig > composer.json" checkreturn="true" />
-				<exec command="composer update --no-dev" passthru="true" checkreturn="true" />
-				<exec command="mv composer.json.orig composer.json" checkreturn="true" />
-				<exec command="git status --short composer.lock" outputProperty="git.status.composerlock" />
-				<if>
-					<istrue value="${git.status.composerlock}" />
-					<then>
-						<exec command="git add -f composer.lock" passthru="true" checkreturn="true" />
-						<exec command="git commit -m 'Added composer.lock for ${tagName}'" passthru="true" checkreturn="true" />
-						<gittag force="true" name="${tagName}" repository="." />
-						<echo msg="Tagged ${tagName}" />
-						<exec command="git rm composer.lock" passthru="true" checkreturn="true" />
-						<exec command="git commit -m 'Removed composer.lock'" passthru="true" checkreturn="true" />
-						<propertyprompt propertyName="pushToOrigin" 
-							promptText="Check that the composer.lock points to the right versions. Ready to push and tag the installer?" />
-						<gitpush repository="." />
-						<gitpush tags="true" force="true" repository="." />
-					</then>
-					<else>
-						<echo msg="No changes to composer.lock, only re-tagging release." />
-						<gittag force="true" name="${tagName}" repository="." />
-						<gitpush tags="true" force="true" repository="." />
-					</else>
-				</if>
-			</try>
-			<finally>
-				<exec command="git checkout composer.json" checkreturn="true" />
-			</finally>
-		</trycatch>
-
-	</target>
-	
 	<target name="upload"
 		description="Uploads archives previously created through 'ping archive' to a public webhost, and notifies a group of people of the new release. Requires working public key auth on the release destination."
 		depends="setup"
@@ -435,12 +370,23 @@ ${release_url}SilverStripe-framework-v${tagName}.zip
 			</else>
 		</if>
 
-		<echo msg="# ${changelog.toCommit}${line.separator}${line.separator}# Overview${line.separator}${line.separator}TODO${line.separator}${changelogOutput}" file="framework/${changelog.path}" />
-		<echo msg="Written changelog to 'framework/${changelog.path}'." />
+		<if>
+			<available file="${frameworkdir}/${changelog.path}" />	
+			<then>
+				<echo msg="Changelog exists in '${frameworkdir}/${changelog.path}', please add content manually." />
+				<echo msg="${changelogOutput}" />
+			</then>
+			<else>
+				<touch file="${frameworkdir}/${changelog.path}" />		
+				<echo msg="# ${changelog.toCommit}${line.separator}${line.separator}# Overview${line.separator}${line.separator}TODO${line.separator}${changelogOutput}" file="${frameworkdir}/${changelog.path}" />
+				<echo msg="Written changelog to '${frameworkdir}/${changelog.path}'." />
+			</else>
+		</if>
+		
 		<input propertyname="_null" message="Now add a highlevel changelog to the file before I can commit it. Ready to commit and push?" />
-		<exec command="git add ${changelog.path}" dir="framework" />
-		<exec command="git commit -m 'Added ${changelog.toCommit} changelog'" dir="framework" />
-		<gitpush repository="." />
+		<exec command="git add ${changelog.path}" dir="${frameworkdir}" />
+		<exec command="git commit -m 'Added ${changelog.toCommit} changelog'" dir="${frameworkdir}" />
+		<gitpush repository="${frameworkdir}" />
 	</target>
 
 	<target name="translations-staging-setup">
@@ -475,7 +421,7 @@ ${release_url}SilverStripe-framework-v${tagName}.zip
 		description="Collect translation on a module, commit them into a specialized branch and push to the origin repository."
 		depends="translations-staging-setup">
 		<exec command="git merge --strategy recursive -X theirs origin/master" dir="${module}" checkreturn="true" />
-		<exec command="php framework/cli-script.php dev/tasks/i18nTextCollectorTask module=${module} merge=true" passthru="true" checkreturn="true" />
+		<exec command="php ${frameworkdir}/cli-script.php dev/tasks/i18nTextCollectorTask module=${module} merge=true" passthru="true" checkreturn="true" />
 		<exec command="git status --untracked-files=no --short" dir="${module}" outputProperty="git.status.${module}" />
 		<if>
 			<istrue value="${git.status.${module}}" />
