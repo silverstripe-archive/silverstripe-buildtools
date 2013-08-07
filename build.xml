@@ -378,14 +378,14 @@ ${release_url}SilverStripe-framework-v${tagName}.zip
 			</then>
 			<else>
 				<touch file="${frameworkdir}/${changelog.path}" />		
-				<echo msg="# ${changelog.toCommit}${line.separator}${line.separator}# Overview${line.separator}${line.separator}TODO${line.separator}${changelogOutput}" file="${frameworkdir}/${changelog.path}" />
+				<echo msg="# ${tagName}${line.separator}${line.separator}# Overview${line.separator}${line.separator}TODO${line.separator}${changelogOutput}" file="${frameworkdir}/${changelog.path}" />
 				<echo msg="Written changelog to '${frameworkdir}/${changelog.path}'." />
 			</else>
 		</if>
 		
 		<input propertyname="_null" message="Now add a highlevel changelog to the file before I can commit it. Ready to commit and push?" />
 		<exec command="git add ${changelog.path}" dir="${frameworkdir}" />
-		<exec command="git commit -m 'Added ${changelog.toCommit} changelog'" dir="${frameworkdir}" />
+		<exec command="git commit -m 'Added ${tagName} changelog'" dir="${frameworkdir}" />
 		<gitpush repository="${frameworkdir}" />
 	</target>
 
