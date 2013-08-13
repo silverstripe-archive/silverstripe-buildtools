@@ -117,6 +117,8 @@ Options:
 	<target name="module-create-tag" if="basedir,module,tagName" 
 		description="Creates a new git tag in the chosen repo">
 		<!-- TODO Prompt for overwriting existing tag -->
+		<!-- Force commit to ensure packagist release date is accurate -->
+		<exec command="git commit --allow-empty -m 'Tagged ${tagName}'" checkreturn="true" dir="${module}" />
 		<gittag repository="${module}" name="${tagName}" force="true" />
 		<echo msg="git tag '${tagName}' added to '${module}' git repository" />
 	</target>
