@@ -104,14 +104,25 @@ Options:
 	</target>
 
 	<target name="module-checkout" 
-		description="Checkout the specified tag on all working copies"
+		description="Checkout the specified branch on all working copies"
 		if="baseBranchName,module">
 		<!-- TODO Prompt for overwriting existing branch -->
 		<echo msg="checking out ${module}"/>
 		<exec command="git stash" dir="${module}" />
 		<exec command="git checkout -B ${baseBranchName} origin/${baseBranchName}" checkreturn="true" dir="${module}" />
 		<!-- <exec command="git stash pop" dir="${module}" /> -->
-		<echo msg="Checked out ${baseBranchName} tag/branch in '${module}' git repository" />
+		<echo msg="Checked out ${baseBranchName} branch in '${module}' git repository" />
+	</target>
+
+	<target name="module-checkout-tag" 
+		description="Checkout the specified tag on all working copies"
+		if="baseBranchName,module">
+		<!-- TODO Prompt for overwriting existing branch -->
+		<echo msg="checking out ${module}"/>
+		<exec command="git stash" dir="${module}" />
+		<exec command="git checkout ${tagName}" checkreturn="true" dir="${module}" />
+		<!-- <exec command="git stash pop" dir="${module}" /> -->
+		<echo msg="Checked out ${tagName} tag '${module}' git repository" />
 	</target>
 
 	<target name="module-create-tag" if="basedir,module,tagName" 
@@ -137,6 +148,9 @@ Options:
 	<target name="archive" if="basedir,tagName,archiveName" 
 		description="Creates a gzip archive from the current folder (removes any version control files)"
 		depends="setup">
+
+		<!-- Check out a specific tag, relevant if the task is run separately and the branch has advanced since the tag -->
+		<foreach list="${modulesAndRoot}" param="module" target="module-checkout-tag" />
 
 		<echo msg="### Creating '${archiveName}' archive"/>
 
