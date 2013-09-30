@@ -129,14 +129,14 @@ Options:
 		description="Creates a new git tag in the chosen repo">
 		<!-- TODO Prompt for overwriting existing tag -->
 		<!-- Force commit to ensure packagist release date is accurate -->
-		<exec command="git commit --allow-empty -m 'Tagged ${tagName}'" checkreturn="true" dir="${module}" />
-		<gittag repository="${module}" name="${tagName}" force="true" />
+		<gittag repository="${module}" name="${tagName}" force="true" annotate="true" message="Tagged ${tagName}" />
 		<echo msg="git tag '${tagName}' added to '${module}' git repository" />
 	</target>
 
 	<target name="module-push-tag" if="basedir,module,tagName" 
 		description="Pushes all local tags to their respective origin repositories">
-		<gitpush tags="true" force="true" repository="${module}" />
+		<gitpush refspec="+refs/heads/${baseBranchName}" repository="${module}" />
+		<gitpush refspec="+refs/tags/${tagName}" force="true" repository="${module}" />
 		<echo msg="Pushed tags for '${module}'" />
 	</target>
 
@@ -402,7 +402,7 @@ ${release_url}SilverStripe-framework-v${tagName}.zip
 		<input propertyname="_null" message="Now add a highlevel changelog to the file before I can commit it. Ready to commit and push?" />
 		<exec command="git add ${changelog.path}" dir="${frameworkdir}" />
 		<exec command="git commit -m 'Added ${tagName} changelog'" dir="${frameworkdir}" />
-		<gitpush repository="${frameworkdir}" />
+		<gitpush refspec="+refs/heads/${branchName}" repository="${frameworkdir}" />
 	</target>
 
 	<target name="translations-staging-setup">
