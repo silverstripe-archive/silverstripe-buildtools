@@ -232,6 +232,7 @@ Options:
 						<exclude name="buildtools/**" />
 						<exclude name="mysite/local.conf.php" />
 						<exclude name="mysite/db.conf.php" />
+						<exclude name="mysite/code/Page.php" />
 						<exclude name="**/*.log" />
 						<exclude name="**/.svn/**" />
 						<exclude name="**/.git/**" />
