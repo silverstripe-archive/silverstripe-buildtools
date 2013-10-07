@@ -68,7 +68,6 @@ Options:
 			promptText="Tag name? Check http://goo.gl/1EDBJ for conventions"
 			useExistingValue="true"
 			defaultValue="x.y.z[-(alpha|beta|rc)]" />
-		<property name="tmpBranchName" value="${tagName}-tmp" override="true" />
 		<php expression="version_compare(preg_replace('/([\d\.]*)(.*)/', '$1', '${tagName}'), '3.0', '&lt;=')" returnProperty="versionLowerThan3x" />
 
 		<echo msg="### Checking out ${baseBranchName}" />
@@ -135,8 +134,8 @@ Options:
 
 	<target name="module-push-tag" if="basedir,module,tagName" 
 		description="Pushes all local tags to their respective origin repositories">
-		<gitpush refspec="+refs/heads/${baseBranchName}" repository="${module}" />
-		<gitpush refspec="+refs/tags/${tagName}" force="true" repository="${module}" />
+		<gitpush refspec="${baseBranchName}" repository="${module}" />
+		<gitpush refspec="${tagName}" force="true" repository="${module}" />
 		<echo msg="Pushed tags for '${module}'" />
 	</target>
 
@@ -403,7 +402,7 @@ ${release_url}SilverStripe-framework-v${tagName}.zip
 		<input propertyname="_null" message="Now add a highlevel changelog to the file before I can commit it. Ready to commit and push?" />
 		<exec command="git add ${changelog.path}" dir="${frameworkdir}" />
 		<exec command="git commit -m 'Added ${tagName} changelog'" dir="${frameworkdir}" />
-		<gitpush refspec="+refs/heads/${branchName}" repository="${frameworkdir}" />
+		<gitpush refspec="${branchName}" repository="${frameworkdir}" />
 	</target>
 
 	<target name="translations-staging-setup">
