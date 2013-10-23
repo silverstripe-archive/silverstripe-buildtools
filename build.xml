@@ -14,6 +14,7 @@ phing help
 	<taskdef name="findRepos" classname="buildtools.src.FindRepositoriesTask" />
 	<taskdef name="ssmodules" classname="buildtools.src.LoadModulesTask" />
 	<taskdef name="sschangelog" classname="buildtools.src.CreateChangelog" />
+	<taskdef name="generateJavascriptI18nTask" classname="buildtools.src.GenerateJavascriptI18nTask" />
 	<taskdef name="updateTranslationsTask" classname="buildtools.src.UpdateTranslationsTask" />
 	<property name="basedir" value="." override="true" />
 	<property name="archiveDest" value="." />
@@ -531,6 +532,14 @@ ${release_url}SilverStripe-framework-v${tagName}.zip
 		<foreach list="framework,cms" param="module" target="translations-update-git-masterfile" />
 		<foreach list="framework,cms" param="module" target="translations-update-gl-masterfile" />
 		<foreach list="framework,cms" param="module" target="translations-update-gl-contribs" />
+	</target>
+
+	<target name="translation-generate-javascript">
+		<foreach list="${modules}" param="module" target="translation-generate-javascript-for-module" />
+	</target>
+
+	<target name="translation-generate-javascript-for-module">
+		<generateJavascriptI18nTask modulePath="${basedir}/${module}" />
 	</target>
 
 </project>
