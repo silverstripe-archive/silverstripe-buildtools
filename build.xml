@@ -535,7 +535,7 @@ ${release_url}SilverStripe-framework-v${tagName}.zip
 	</target>
 
 	<target name="translation-generate-javascript">
-		<foreach list="${modules}" param="module" target="translation-generate-javascript-for-module" />
+		<foreach list="${modules},framework/admin" param="module" target="translation-generate-javascript-for-module" />
 	</target>
 
 	<target name="translation-generate-javascript-for-module">

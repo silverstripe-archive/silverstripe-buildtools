@@ -42,8 +42,10 @@ TMPL;
 		foreach($iterator as $item) {
 			$translations = file_get_contents($item->getPathName());
 			$locale = preg_replace('/\.js$/','', $item->getFilename());
+			$targetPath = $this->modulePath . $ds . $this->targetDir . $ds . $item->getFilename();
+			echo "Generating $targetPath\n";
 			file_put_contents(
-				$this->modulePath . $ds . $this->targetDir . $ds . $item->getFilename(),
+				$targetPath,
 				str_replace(
 					array(
 						'%TRANSLATIONS%', 
