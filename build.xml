@@ -1,13 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- Installation instructions:
-
-sudo pear channel-discover pear.phing.info
-sudo pear install phing/phing
-phing help
-
--->
-
 <project name="buildtools" phingVersion="2.4.5">
 
 	<!-- Load in the custom tasks -->

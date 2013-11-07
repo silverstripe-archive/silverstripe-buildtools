@@ -21,8 +21,15 @@ The phing targets are generally compatible with SilverStripe 2.4 and newer.
 
 First of all, get started with phing:
 
-	pear channel-discover pear.phing.info
-	pear install phing/phing
+	composer config --global repositories.pear pear http://pear.php.net
+	composer global require phing/phing:2.4.*
+	composer global require pear-pear.php.net/Pear:*
+	composer global require pear-pear.php.net/Archive_Tar:*
+	composer global require pear-pear.php.net/VersionControl_Git:*
+
+Ensure the global composer binaries are set in your `$PATH`:
+
+	echo -e 'export PATH=$PATH:~/.composer/vendor/bin' >> ~/.bash_profile
 
 Then install the project via [composer](http://getcomposer.org).
 
