@@ -13,7 +13,7 @@
 	<property name="frameworkdir" value="framework" />
 	<property name="modules" value="${frameworkdir},cms" />
 	<property name="modulesAndRoot" value=".,${modules}" />
-	<property name="changelog.toCommit" value="${baseBranchName}" />
+	<property name="changelog.toCommit" value="refs/heads/${baseBranchName}" />
 
 	<!-- 
 		=================================================================
@@ -111,7 +111,7 @@ Options:
 		<!-- TODO Prompt for overwriting existing branch -->
 		<echo msg="checking out ${module}"/>
 		<exec command="git stash" dir="${module}" />
-		<exec command="git checkout ${tagName}" checkreturn="true" dir="${module}" />
+		<exec command="git checkout refs/tags/${tagName}" checkreturn="true" dir="${module}" />
 		<!-- <exec command="git stash pop" dir="${module}" /> -->
 		<echo msg="Checked out ${tagName} tag '${module}' git repository" />
 	</target>
@@ -126,8 +126,8 @@ Options:
 
 	<target name="module-push-tag" if="basedir,module,tagName" 
 		description="Pushes all local tags to their respective origin repositories">
-		<gitpush refspec="${baseBranchName}" repository="${module}" />
-		<gitpush refspec="${tagName}" force="true" repository="${module}" />
+		<gitpush refspec="refs/heads/${baseBranchName}" repository="${module}" />
+		<gitpush refspec="refs/tags/${tagName}" force="true" repository="${module}" />
 		<echo msg="Pushed tags for '${module}'" />
 	</target>
 
@@ -352,10 +352,10 @@ ${release_url}SilverStripe-framework-v${tagName}.zip
 		<echo msg="### Creating changelog" />
 	
 		<propertyprompt propertyName="changelog.fromCommit" 
-			promptText="Create changelog from which tag/branch/commit?"
+			promptText="Create changelog from which tag/branch/commit? (use refs/heads/branchname or refs/tags/tagname to qualify branches or tags)"
 			useExistingValue="true" />
 		<propertyprompt propertyName="changelog.toCommit" 
-			promptText="Create changelog to which tag/branch/commit?"
+			promptText="Create changelog to which tag/branch/commit? (use refs/heads/branchname or refs/tags/tagname to qualify branches or tags)"
 			useExistingValue="true" />
 		<propertyprompt propertyName="tagName" 
 			promptText="Tag name?"
@@ -394,7 +394,7 @@ ${release_url}SilverStripe-framework-v${tagName}.zip
 		<input propertyname="_null" message="Now add a highlevel changelog to the file before I can commit it. Ready to commit and push?" />
 		<exec command="git add ${changelog.path}" dir="${frameworkdir}" />
 		<exec command="git commit -m 'Added ${tagName} changelog'" dir="${frameworkdir}" />
-		<gitpush refspec="${branchName}" repository="${frameworkdir}" />
+		<gitpush refspec="refs/heads/${branchName}" repository="${frameworkdir}" />
 	</target>
 
 	<target name="translation-generate-javascript">
