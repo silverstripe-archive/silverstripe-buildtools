@@ -194,15 +194,15 @@ Options:
 
 		<!-- create tar archive - CMS -->
 		<tar destfile="${archiveDest}/${archiveName}-cms-v${tagName}.tar.gz" compression="gzip">
-			<fileset dir="${tmp}">
-				<include name="${archiveName}-cms-v${tagName}/**" />
+			<fileset dir="${tmp}/${archiveName}-cms-v${tagName}">
+				<include name="**" />
 			</fileset>
 		</tar>
 
 		<!-- create zip archive - CMS -->
 		<zip destfile="${archiveDest}/${archiveName}-cms-v${tagName}.zip">
-			<fileset dir="${tmp}">
-				<include name="${archiveName}-cms-v${tagName}/**" />
+			<fileset dir="${tmp}/${archiveName}-cms-v${tagName}">
+				<include name="**" />
 			</fileset>
 		</zip>
 
@@ -260,15 +260,15 @@ Options:
 
 				<!-- create tar archive - Framework -->
 				<tar destfile="${archiveDest}/${archiveName}-framework-v${tagName}.tar.gz" compression="gzip">
-					<fileset dir="${tmp}">
-						<include name="${archiveName}-framework-v${tagName}/**" />
+					<fileset dir="${tmp}/${archiveName}-framework-v${tagName}">
+						<include name="**" />
 					</fileset>
 				</tar>
 
 				<!-- create zip archive - Framework -->
 				<zip destfile="${archiveDest}/${archiveName}-framework-v${tagName}.zip">
-					<fileset dir="${tmp}">
-						<include name="${archiveName}-framework-v${tagName}/**" />
+					<fileset dir="${tmp}/${archiveName}-framework-v${tagName}">
+						<include name="**" />
 					</fileset>
 				</zip>
 
