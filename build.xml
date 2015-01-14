@@ -307,7 +307,7 @@ Options:
 		<propertyprompt propertyName="confirmUpload" 
 			promptText="Please unzip and sanity check the created archives. Ready for upload?" />
 
-		<property name="release_dest" value="qa-servers@homer:/sites/ssorg-v2/www/assets/releases/" />
+		<property name="release_dest" value="admin@nfs1.silverstripe.org:/var/www/mysite/shared/assets/releases" />
 		<property name="release_url" value="http://silverstripe.org/assets/releases/" />
 	
 		<if>
@@ -338,7 +338,7 @@ ${release_url}SilverStripe-framework-v${tagName}.zip
 
 	<target name="upload-nightly"
 		description="Uploads archives previously created through 'phing archive' to a public webhost">
-		<property name="nightly_dest" value="qa-servers@homer:/sites/ssorg-v2/www/assets/nightlies/" />
+		<property name="nightly_dest" value="admin@nfs1.silverstripe.org:/var/www/mysite/shared/assets/releases" />
 		<exec command="scp -v -P 2222 SilverStripe-*.tar.gz ${nightly_dest}" />
 		<exec command="scp -v -P 2222 SilverStripe-*.zip ${nightly_dest}" />
 	</target>
