@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<project name="buildtools" phingVersion="2.4.5">
+<project name="buildtools" phingVersion="2.4.5" default="help">
 
 	<!-- Load in the custom tasks -->
 	<taskdef name="findRepos" classname="buildtools.src.FindRepositoriesTask" />
