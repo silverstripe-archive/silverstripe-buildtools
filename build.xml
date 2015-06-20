@@ -41,7 +41,7 @@ Options:
 
 	<target name="release" 
 		description="Wrapper task to handle a release"
-		depends="setup,changelog,tag,archive,upload,teardown">
+		depends="changelog,tag,archive,upload">
 		<echo msg="### Done! Please do the following manually:" />
 		<echo msg=" * Release announcement on mailinglist and forum" />
 		<echo msg=" * Update silverstripe.org download links" />
@@ -69,51 +69,12 @@ Options:
 		<foreach list="${modules}" param="module" target="module-checkout" />
 	</target>
 
-	<target name="teardown">
-		<echo msg="### Checking out ${baseBranchName}" />
-		<property name="branchName" value="${baseBranchName}" override="true" />
-		<foreach list="${modules}" param="module" target="module-checkout" />
-	</target>
-
 	<target name="tag"
 		description="Tag each module and push tags"
 		depends="setup">
 		<echo msg="### Creating tags" />
 		<foreach list="${modules},." param="module" target="module-create-tag" />
 		<foreach list="${modules},." param="module" target="module-push-tag" />
-	</target>
-
-	<target name="module-check-changes" if="basedir,module" 
-		description="Ensures that the module doesn't have any changes in the working copy">
-		<exec command="git status --untracked-files=no --short" dir="${module}" outputProperty="git.status.${module}"/>
-		<if>
-			<istrue value="${git.status.${module}}" />
-			<then>
-				<fail message="Changes found in ${module}: ${git.status.${module}}. Aborting." />
-			</then>
-		</if>
-	</target>
-
-	<target name="module-checkout" 
-		description="Checkout the specified branch on all working copies"
-		if="baseBranchName,module">
-		<!-- TODO Prompt for overwriting existing branch -->
-		<echo msg="checking out ${module}"/>
-		<exec command="git stash" dir="${module}" />
-		<exec command="git checkout -B ${baseBranchName} origin/${baseBranchName}" checkreturn="true" dir="${module}" />
-		<!-- <exec command="git stash pop" dir="${module}" /> -->
-		<echo msg="Checked out ${baseBranchName} branch in '${module}' git repository" />
-	</target>
-
-	<target name="module-checkout-tag" 
-		description="Checkout the specified tag on all working copies"
-		if="baseBranchName,module">
-		<!-- TODO Prompt for overwriting existing branch -->
-		<echo msg="checking out ${module}"/>
-		<exec command="git stash" dir="${module}" />
-		<exec command="git checkout refs/tags/${tagName}" checkreturn="true" dir="${module}" />
-		<!-- <exec command="git stash pop" dir="${module}" /> -->
-		<echo msg="Checked out ${tagName} tag '${module}' git repository" />
 	</target>
 
 	<target name="module-create-tag" if="basedir,module,tagName" 
@@ -131,10 +92,6 @@ Options:
 		<echo msg="Pushed tags for '${module}'" />
 	</target>
 
-	<target name="module-fetch" if="basedir,module" 
-		description="Fetches changes from git upstream">
-		<gitfetch repository="${module}" />
-	</target>
 
 	<target name="archive" if="basedir,tagName,archiveName" 
 		description="Creates a gzip archive from the current folder (removes any version control files)"
@@ -285,18 +242,6 @@ Options:
 
 	</target>
 
-	<target name="create-branch"
-		description="Creates a git branch and checks it out. Used mainly for temporary composer branches."
-		if="module,branchName">
-		<gitcheckout force="true" branchname="${branchName}" repository="${module}" />
-	</target>
-
-	<target name="delete-branch"
-		description="Delete a git branch"
-		if="tagName,branchName">
-		<gitbranch forceremove="true" branchname="${branchName}" repository="${module}" />
-	</target>
-
 	<target name="upload"
 		description="Uploads archives previously created through 'ping archive' to a public webhost, and notifies a group of people of the new release. Requires working public key auth on the release destination."
 		depends="setup,archive"
@@ -335,14 +280,6 @@ ${release_url}SilverStripe-framework-v${tagName}.zip
 		</if>
 
 	</target>
-
-	<target name="upload-nightly"
-		description="Uploads archives previously created through 'phing archive' to a public webhost">
-		<property name="nightly_dest" value="admin@nfs1.silverstripe.org:/var/www/mysite/shared/assets/releases" />
-		<exec command="scp -v -P 2222 SilverStripe-*.tar.gz ${nightly_dest}" />
-		<exec command="scp -v -P 2222 SilverStripe-*.zip ${nightly_dest}" />
-	</target>
-	
 
 	<target name="changelog" 
 		description="Create a changelog.md file collated from multiple repos" 
