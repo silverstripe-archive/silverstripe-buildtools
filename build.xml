@@ -3,13 +3,11 @@
 <project name="buildtools" phingVersion="2.4.5" default="help">
 
 	<!-- Load in the custom tasks -->
-	<taskdef name="findRepos" classname="buildtools.src.FindRepositoriesTask" />
-	<taskdef name="ssmodules" classname="buildtools.src.LoadModulesTask" />
-	<taskdef name="sschangelog" classname="buildtools.src.CreateChangelog" />
-	<taskdef name="generateJavascriptI18nTask" classname="buildtools.src.GenerateJavascriptI18nTask" />
+	<taskdef name="findRepos" classname="src.FindRepositoriesTask" />
+	<taskdef name="sschangelog" classname="src.CreateChangelog" />
+	<taskdef name="generateJavascriptI18nTask" classname="src.GenerateJavascriptI18nTask" />
 	<property name="basedir" value="." override="true" />
 	<property name="archiveDest" value="." />
-	<property name="archiveName" value="SilverStripe" />
 	<property name="frameworkdir" value="framework" />
 	<property name="modules" value="${frameworkdir},cms" />
 	<property name="modulesAndRoot" value=".,${modules}" />
@@ -92,148 +90,93 @@ Options:
 		<echo msg="Pushed tags for '${module}'" />
 	</target>
 
-
-	<target name="archive" if="basedir,tagName,archiveName" 
-		description="Creates a gzip archive from the current folder (removes any version control files)"
-		depends="setup">
-
-		<!-- Check out a specific tag, relevant if the task is run separately and the branch has advanced since the tag -->
-		<foreach list="${modulesAndRoot}" param="module" target="module-checkout-tag" />
-
-		<echo msg="### Creating '${archiveName}' archive"/>
+	<target name="archive" if="tagName" 
+		description="Creates a gzip archive from the current folder (removes any version control files)">
 
 		<php function="sys_get_temp_dir" returnProperty="systmp" />
-		<property name="tmp" value="${systmp}/archiveTask/" />
+		<property name="archiveName" value="SilverStripe-cms-v${tagName}" />
+		<property name="frameworkArchiveName" value="SilverStripe-framework-v${tagName}" />
+		<property name="tmp" value="${systmp}/archiveTask" />
+		<php expression="version_compare(preg_replace('/([\d\.]*)(.*)/', '$1', '${tagName}'), '3.0', '&lt;=')" returnProperty="versionLowerThan3x" />
 
 		<delete dir="${tmp}" failonerror="false" quiet="true" />
+		<mkdir dir="${tmp}" />
 
-		<!-- Copy into a new folder, and tar the whole folder in order to avoid toplevel extracts -->
-		<copy todir="${tmp}/${archiveName}-cms-v${tagName}">
-			<fileset dir="${basedir}">
-				<include name="**/**" />
-				<exclude name="assets/**" />
-				<exclude name="buildtools/**" />
-				<exclude name="mysite/local.conf.php" />
-				<exclude name="mysite/db.conf.php" />
-				<exclude name="**/*.log" />
-				<exclude name="**/.svn/**" />
-				<exclude name="**/.git/**" />
-				<exclude name="**/.project" />
-				<exclude name="**/.buildpath" />
-				<exclude name="**/.settings" />
-				<exclude name="**/.idea/**" />
-				<exclude name="tools/**" />
-				<exclude name="**/tests/**" />
-				<exclude name="cms/docs/**" />
-				<exclude name="${frameworkdir}/docs/**" />
-				<exclude name="build.xml" />
-				<exclude name="_ss_environment.php" />
-				<exclude name="*.tar.gz" />
-				<exclude name="*.zip" />
-				<exclude name="behat.yml" />
-				<exclude name="phpunit.*" />
-				<exclude name="composer.*" />
-			</fileset>
-			<fileset dir="${basedir}">
-				<include name="assets/Uploads" />
-				<include name="assets/.htaccess" />
-				<include name="assets/web.config" />
-			</fileset>
-		</copy>
+		<echo msg="### Creating '${archiveName}' archive" />
+
+		<exec command="composer create-project silverstripe/installer ${tmp}/${archiveName} ${tagName} --prefer-dist --no-dev"
+			checkreturn="true" logoutput="true" />
 
 		<!-- Write version info to the core folders (shouldn't be in version control) -->
-		<echo msg="${tagName}" file="${tmp}/${archiveName}-cms-v${tagName}/${frameworkdir}/silverstripe_version" />
-		<echo msg="${tagName}" file="${tmp}/${archiveName}-cms-v${tagName}/cms/silverstripe_version" />
+		<echo msg="${tagName}" file="${tmp}/${archiveName}/${frameworkdir}/silverstripe_version" />
+		<echo msg="${tagName}" file="${tmp}/${archiveName}/cms/silverstripe_version" />
+
+		<!-- remove development files not needed in the archive package -->
+		<delete failonerror="false" quiet="true">
+			<fileset dir="${tmp}/${archiveName}">
+				<include name="**/docs/**" />
+				<include name="**/tests/**" />
+				<include name="build.xml" />
+				<include name="behat.yml" />
+				<include name="phpunit.*" />
+			</fileset>
+		</delete>
 
 		<!-- remove any pre-existing archives -->
-		<delete file="${archiveDest}/${archiveName}-cms-v${tagName}.tar.gz" failonerror="false" quiet="true" />
-		<delete file="${archiveDest}/${archiveName}-cms-v${tagName}.zip" failonerror="false" quiet="true" />
+		<delete failonerror="false" quiet="true">
+			<fileset dir="${archiveDest}">
+				<include name="${archiveName}.tar.gz" />
+				<include name="${archiveName}.zip" />
+			</fileset>
+		</delete>
 
 		<!-- create tar archive - CMS -->
-		<tar destfile="${archiveDest}/${archiveName}-cms-v${tagName}.tar.gz" compression="gzip">
-			<fileset dir="${tmp}/${archiveName}-cms-v${tagName}">
+		<tar destfile="${archiveDest}/${archiveName}.tar.gz" compression="gzip">
+			<fileset dir="${tmp}/${archiveName}">
 				<include name="**" />
 			</fileset>
 		</tar>
-
-		<!-- create zip archive - CMS -->
-		<zip destfile="${archiveDest}/${archiveName}-cms-v${tagName}.zip">
-			<fileset dir="${tmp}/${archiveName}-cms-v${tagName}">
-				<include name="**" />
-			</fileset>
-		</zip>
-
 		<echo msg="Created archive: ${archiveDest}/${archiveName}-cms-v${tagName}.tar.gz" />
 		<echo msg="##teamcity[publishArtifacts '${archiveName}-cms-v${tagName}.tar.gz']" />
 
+		<!-- create zip archive - CMS -->
+		<zip destfile="${archiveDest}/${archiveName}.zip">
+			<fileset dir="${tmp}/${archiveName}">
+				<include name="**" />
+			</fileset>
+		</zip>
 		<echo msg="Created archive: ${archiveDest}/${archiveName}-cms-v${tagName}.zip" />
 		<echo msg="##teamcity[publishArtifacts '${archiveName}-cms-v${tagName}.zip']" />
 
 		<if>
 			<not><istrue value="${versionLowerThan3x}" /></not>
 			<then>
-				<!-- Copy into a new folder, and tar the whole folder in order to avoid toplevel extracts -->
-				<copy todir="${tmp}/${archiveName}-framework-v${tagName}">
-					<fileset dir="${basedir}">
-						<include name="**/**" />
-						<exclude name="assets/**" />
-						<exclude name="buildtools/**" />
-						<exclude name="mysite/local.conf.php" />
-						<exclude name="mysite/db.conf.php" />
-						<exclude name="mysite/code/Page.php" />
-						<exclude name="**/*.log" />
-						<exclude name="**/.svn/**" />
-						<exclude name="**/.git/**" />
-						<exclude name="**/.project" />
-						<exclude name="**/.buildpath" />
-						<exclude name="**/.settings" />
-						<exclude name="**/.idea/**" />
-						<exclude name="tools/**" />
-						<exclude name="**/tests/**" />
-						<exclude name="cms/docs/**" />
-						<exclude name="${frameworkdir}/docs/**" />
-						<exclude name="build.xml" />
-						<exclude name="_ss_environment.php" />
-						<exclude name="*.tar.gz" />
-						<exclude name="*.zip" />
-						<exclude name="behat.yml" />
-						<exclude name="composer.*" />
-						<exclude name="phpunit.*" />
-						<exclude name="cms/**" />
-					</fileset>
-					<fileset dir="${basedir}">
-						<include name="assets/Uploads" />
-						<include name="assets/.htaccess" />
-						<include name="assets/web.config" />
-					</fileset>
-				</copy>
-
-				<!-- Write version info to the core folders (shouldn't be in version control) -->
-				<echo msg="${tagName}" file="${tmp}/${archiveName}-framework-v${tagName}/${frameworkdir}/silverstripe_version" />
+				<exec command="composer remove silverstripe/cms silverstripe/siteconfig --update-no-dev"
+					dir="${tmp}/${archiveName}"
+					checkreturn="true" logoutput="true" />
 
 				<!-- remove any pre-existing archives -->
-				<delete file="${archiveDest}/${archiveName}-framework-v${tagName}.tar.gz" failonerror="false" quiet="true" />
-				<delete file="${archiveDest}/${archiveName}-framework-v${tagName}.zip" failonerror="false" quiet="true" />
+				<delete file="${archiveDest}/${frameworkArchiveName}.tar.gz" failonerror="false" quiet="true" />
+				<delete file="${archiveDest}/${frameworkArchiveName}.zip" failonerror="false" quiet="true" />
 
 				<!-- create tar archive - Framework -->
-				<tar destfile="${archiveDest}/${archiveName}-framework-v${tagName}.tar.gz" compression="gzip">
-					<fileset dir="${tmp}/${archiveName}-framework-v${tagName}">
+				<tar destfile="${archiveDest}/${frameworkArchiveName}.tar.gz" compression="gzip">
+					<fileset dir="${tmp}/${archiveName}">
 						<include name="**" />
 					</fileset>
 				</tar>
-
 				<!-- create zip archive - Framework -->
-				<zip destfile="${archiveDest}/${archiveName}-framework-v${tagName}.zip">
-					<fileset dir="${tmp}/${archiveName}-framework-v${tagName}">
+				<zip destfile="${archiveDest}/${frameworkArchiveName}.zip">
+					<fileset dir="${tmp}/${archiveName}">
 						<include name="**" />
 					</fileset>
 				</zip>
 
-				<echo msg="Created archive: ${archiveDest}/${archiveName}-framework-v${tagName}.tar.gz" />
-				<echo msg="##teamcity[publishArtifacts '${archiveName}-framework-v${tagName}.tar.gz']" />
+				<echo msg="Created archive: ${archiveDest}/${frameworkArchiveName}.tar.gz" />
+				<echo msg="##teamcity[publishArtifacts '${frameworkArchiveName}.tar.gz']" />
 
-				<echo msg="Created archive: ${archiveDest}/${archiveName}-framework-v${tagName}.tar.gz" />
-				<echo msg="##teamcity[publishArtifacts '${archiveName}-framework-v${tagName}.zip']" />
+				<echo msg="Created archive: ${archiveDest}/${frameworkArchiveName}.zip" />
+				<echo msg="##teamcity[publishArtifacts '${frameworkArchiveName}.zip']" />
 			</then>
 		</if>
 
