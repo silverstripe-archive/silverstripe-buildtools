@@ -13,6 +13,7 @@
 	"require": {
 		"php": ">=5.3.2",
 		"phing/phing": "2.11.*",
-		"pear-pear.php.net/VersionControl_Git": "*"
+		"pear-pear.php.net/VersionControl_Git": "*",
+		"pear-pear.php.net/HTTP_Request2": "*"  
 	}
 }

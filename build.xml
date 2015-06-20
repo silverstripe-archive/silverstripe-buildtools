@@ -104,8 +104,13 @@ Options:
 
 		<echo msg="### Creating '${archiveName}' archive" />
 
-		<exec command="composer create-project silverstripe/installer ${tmp}/${archiveName} ${tagName} --prefer-dist --no-dev"
-			checkreturn="true" logoutput="true" />
+		<httpget url="http://getcomposer.org/composer.phar" dir="${tmp}" />
+
+		<exec command="php composer.phar create-project silverstripe/installer ${archiveName} ${tagName} --prefer-dist --no-dev"
+			dir="${tmp}" checkreturn="true" logoutput="true" />
+
+		<!-- Copy composer.phar into the archive -->
+		<copy file="${tmp}/composer.phar" tofile="${tmp}/${archiveName}/composer.phar" />
 
 		<!-- Write version info to the core folders (shouldn't be in version control) -->
 		<echo msg="${tagName}" file="${tmp}/${archiveName}/${frameworkdir}/silverstripe_version" />
@@ -151,7 +156,7 @@ Options:
 		<if>
 			<not><istrue value="${versionLowerThan3x}" /></not>
 			<then>
-				<exec command="composer remove silverstripe/cms silverstripe/siteconfig --update-no-dev"
+				<exec command="php composer.phar remove silverstripe/cms silverstripe/siteconfig --update-no-dev"
 					dir="${tmp}/${archiveName}"
 					checkreturn="true" logoutput="true" />
 
