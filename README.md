@@ -3,8 +3,8 @@
 ## Overview
 
 The goal of this project is to aid SilverStripe developers in automating various aspects of their build
-through [phing](http://phing.info). The tools are designed to run within a SilverStripe project,
-in the `buildtools/` subfolder.
+through [phing](http://phing.info). The tools are designed to run as a standalone package, pulling the
+modules to be packaged from Packagist.
 
 It is primarily geared towards core developers preparing a SilverStripe release, 
 but can also be a starting point for custom build setups.
@@ -19,42 +19,16 @@ The phing targets are generally compatible with SilverStripe 2.4 and newer.
 
 ## Installation
 
-First of all, get started with phing:
+Install buildtools into a local directory:
 
-	composer config --global repositories.pear pear http://pear.php.net
-	composer global require phing/phing:2.4.*
-	composer global require pear-pear.php.net/Pear:*
-	composer global require pear-pear.php.net/Archive_Tar:*
-	composer global require pear-pear.php.net/VersionControl_Git:*
-
-Ensure the global composer binaries are set in your `$PATH`:
-
-	echo -e 'export PATH=$PATH:~/.composer/vendor/bin' >> ~/.bash_profile
-
-Then install the project via [composer](http://getcomposer.org). 
-
-	cd my-silverstripe-webroot/
-	composer require silverstripe/buildtools:*
-
-In case you're not using the tools from a [silverstripe-installer](https://github.com/silverstripe/silverstripe-installer) based webroot, you might need to add a `build.xml` into the webroot to auto-import `buildtools/build.xml`:
-
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<project name="my-project" default="help" phingVersion="2.4.5">
-	<import file="buildtools/build.xml" optional="true" />
-	<property name="basedir" value="." override="true" />
-	<target name="help">
-		<phingcall target="buildtools.help" />
-	</target>
-</project>
-```
+	composer create-project silverstripe/buildtools
 
 ## Usage
 
-Run `phing -l` to see a full list of available targets,
-and `phing help` for in-depth help.
+Run `vendor/bin/phing -l` to see a full list of available targets,
+and `vendor/bin/phing help` for in-depth help.
 
-The most important command is `phing release`. It roughly takes the following steps:
+The most important command is `vendor/bin/phing release`. It roughly takes the following steps:
 
  * Checks out the base release branch (e.g. `3.1`) for core modules and the installer
  * Ensures no local changes are present
