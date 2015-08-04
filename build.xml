@@ -11,7 +11,7 @@
 	<property name="basedir" value="." override="true" />
 	<property name="archiveDest" value="." />
 	<property name="frameworkdir" value="framework" />
-	<property name="modules" value="${frameworkdir},cms" />
+	<property name="modules" value="${frameworkdir},cms,reports,siteconfig" />
 	<property name="modulesAndRoot" value=".,${modules}" />
 	<property name="changelog.toCommit" value="refs/heads/${baseBranchName}" />
 
@@ -64,9 +64,6 @@ Options:
 
 		<echo msg="### Checking out ${baseBranchName}" />
 		<property name="branchName" value="${baseBranchName}" override="true" />
-		<foreach list="${modules}" param="module" target="module-check-changes" />
-		<foreach list="${modules}" param="module" target="module-fetch" />
-		<foreach list="${modules}" param="module" target="module-checkout" />
 	</target>
 
 	<target name="tag"
