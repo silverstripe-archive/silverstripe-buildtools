@@ -1,5 +1,7 @@
 # Phing Buildtools for the SilverStripe Project
 
+**DEPRECATED These tools have been replaced by the [cow release tool](https://github.com/silverstripe/cow)**
+
 ## Overview
 
 The goal of this project is to aid SilverStripe developers in automating various aspects of their build
